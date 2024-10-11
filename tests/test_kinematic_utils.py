@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from path_planners.kinematics_utils.kinematic_utils import (
+from path_planners.utils.kinematic_utils import (
     check_unicycle_reachability,
     calculate_unicycle_final_yaw,
     calculate_unicycle_path_angular_velocity,

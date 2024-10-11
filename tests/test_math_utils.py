@@ -1,6 +1,6 @@
 import numpy as np
 
-from path_planners.kinematics_utils.math_utils import normalize_angle
+from path_planners.utils.math_utils import normalize_angle
 
 
 def test_normalize_angle():

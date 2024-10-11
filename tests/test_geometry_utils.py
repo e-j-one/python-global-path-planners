@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from path_planners.kinematics_utils.geometry_utils import calculate_delta_i_f
+from path_planners.utils.geometry_utils import calculate_delta_i_f
 
 
 def test_normalize_angle():

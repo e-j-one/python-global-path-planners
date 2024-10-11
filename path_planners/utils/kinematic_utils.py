@@ -4,8 +4,8 @@ from typing import Tuple, Optional, List
 
 import numpy as np
 
-import path_planners.kinematics_utils.geometry_utils as GeometryUtils
-import path_planners.kinematics_utils.math_utils as MathUtils
+import path_planners.utils.geometry_utils as GeometryUtils
+import path_planners.utils.math_utils as MathUtils
 
 
 def check_unicycle_reachability(

@@ -2,7 +2,7 @@ from typing import Tuple
 
 import numpy as np
 
-import path_planners.kinematics_utils.math_utils as MathUtils
+import path_planners.utils.math_utils as MathUtils
 
 
 def calculate_delta_i_f(
