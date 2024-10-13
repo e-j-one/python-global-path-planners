@@ -131,14 +131,12 @@ def get_pose_connecting_arc_by_radius(
     - radius: radius of the arc (non-zero, positive for left turn first, negative for right turn first)
     """
     # Get the center of the circle
-    pos_i = (pose_i[0], pose_i[1])
-    pos_f = (pose_f[0], pose_f[1])
     perp_i = (np.cos(pose_i[2] + 0.5 * np.pi), np.sin(pose_i[2] + 0.5 * np.pi))
     perp_f = (np.cos(pose_f[2] + 0.5 * np.pi), np.sin(pose_f[2] + 0.5 * np.pi))
 
     # Get the centers of the circle
-    center_i = (pos_i[0] + radius * perp_i[0], pos_i[1] + radius * perp_i[1])
-    center_f = (pos_f[0] - radius * perp_f[0], pos_f[1] - radius * perp_f[1])
+    center_i = (pose_i[0] + radius * perp_i[0], pose_i[1] + radius * perp_i[1])
+    center_f = (pose_f[0] - radius * perp_f[0], pose_f[1] - radius * perp_f[1])
 
     # Get the midpoint of two centers
     center_mid = (
@@ -160,6 +158,44 @@ def get_pose_connecting_arc_by_radius(
     print("center_i", center_i, "center_f", center_f)
 
     return (center_mid[0], center_mid[1], yaw)
+
+
+def get_pose_path_length_of_arc(
+    pose_i: Tuple[float, float, float],
+    pos_f: Tuple[float, float],
+) -> float:
+    """
+    Given two poses, return the path length of the arc connecting the two poses
+    Returns:
+    - path_length: path length of the arc
+    """
+
+    # 1. Calculate radius of the circle with center at +-r in the y direction from the pose_i
+    vector_i_f = np.array(pos_f) - np.array([pose_i[0], pose_i[1]])
+    dist_i_f = np.linalg.norm(vector_i_f)
+    if dist_i_f < 1e-12:
+        return 0.0
+
+    # delta_i_f: angle difference between heading direction of pose_i and vector_i_f in -pi to pi
+    delta_i_f = GeometryUtils.calculate_delta_i_f(pose_i, pos_f)
+    if abs(delta_i_f) < 1e-12:
+        return dist_i_f
+    elif abs(np.sin(delta_i_f)) < 1e-12:
+        # goal pos is in the opposite direction of the heading direction
+        return np.inf
+
+    turning_radius = 0.5 * dist_i_f / np.sin(delta_i_f)
+
+    pos_f_yaw = calculate_unicycle_final_yaw(pose_i, pos_f)
+
+    angle_diff = pos_f_yaw - pose_i[2]
+    # Normalize the angle difference to [0, 2pi)
+    if delta_i_f > 0:  # left turn
+        angle_diff = angle_diff % (2 * np.pi)
+        return turning_radius * angle_diff
+    else:
+        angle_diff = (-angle_diff) % (2 * np.pi)
+        return -turning_radius * angle_diff
 
 
 def get_pose_to_connect_poses_by_arcs(

@@ -5,6 +5,7 @@ from path_planners.utils.kinematic_utils import (
     check_unicycle_reachability,
     get_circle_radius_candidates,
     get_pose_connecting_arc_by_radius,
+    get_pose_path_length_of_arc,
     get_pose_to_connect_poses_by_arcs,
     calculate_unicycle_final_yaw,
     calculate_unicycle_path_angular_velocity,
@@ -140,21 +141,24 @@ def test_get_circle_radius_candidates():
 def test_get_pose_connecting_arc_by_radius():
     # Test left turn -> right turn with r = 1.0
     for theta in np.linspace(-np.pi, np.pi, 100):
-        assert pytest.approx(
-            (1.0, 1.0, 0.5 * np.pi)
-        ) == get_pose_connecting_arc_by_radius(
+        assert get_pose_connecting_arc_by_radius(
             (0, 0, 0), (2 + np.cos(theta), 1 + np.sin(theta), theta - 0.5 * np.pi), 1.0
-        )
+        ) == pytest.approx((1.0, 1.0, 0.5 * np.pi))
 
     # Test right turn -> left turn with r = -1.0
     for theta in np.linspace(-np.pi, np.pi, 100):
-        assert pytest.approx(
-            (1.0, -1.0, -0.5 * np.pi)
-        ) == get_pose_connecting_arc_by_radius(
+        assert get_pose_connecting_arc_by_radius(
             (0, 0, 0),
             (2 + np.cos(theta), -1 + np.sin(theta), theta + 0.5 * np.pi),
             -1.0,
-        )
+        ) == pytest.approx((1.0, -1.0, -0.5 * np.pi))
+
+
+def test_get_pose_path_length_of_arc():
+    # Test same position
+    assert get_pose_path_length_of_arc((0, 0, 0), (0, 0)) == pytest.approx(0.0)
+    assert get_pose_path_length_of_arc((0, 0, 0), (1, 1)) == pytest.approx(0.5 * np.pi)
+    assert get_pose_path_length_of_arc((0, 0, 0), (1, -1)) == pytest.approx(0.5 * np.pi)
 
 
 def test_get_pose_to_connect_poses_by_arcs():
