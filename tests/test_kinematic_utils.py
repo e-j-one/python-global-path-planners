@@ -3,6 +3,9 @@ import pytest
 
 from path_planners.utils.kinematic_utils import (
     check_unicycle_reachability,
+    get_circle_radius_candidates,
+    get_pose_connecting_arc_by_radius,
+    get_pose_to_connect_poses_by_arcs,
     calculate_unicycle_final_yaw,
     calculate_unicycle_path_angular_velocity,
     calculate_unicycle_w_yaw,
@@ -118,6 +121,44 @@ def test_check_unicycle_reachability():
     assert check_unicycle_reachability(pose_i, (1.0, 0.0), 1.0, 1.0) == False
     pose_i = (0.0, 0, 1.25 * np.pi)
     assert check_unicycle_reachability(pose_i, (1.0, 1.0), 1.0, 1.0) == False
+
+
+def test_get_circle_radius_candidates():
+    # Test left turn -> right turn with r = 1.0
+    for theta in np.linspace(-np.pi, np.pi, 100):
+        assert pytest.approx(1.0) in get_circle_radius_candidates(
+            (0, 0, 0), (2 + np.cos(theta), 1 + np.sin(theta), theta - 0.5 * np.pi)
+        )
+
+    # Test right turn -> left turn with r = -1.0
+    for theta in np.linspace(-np.pi, np.pi, 100):
+        assert pytest.approx(-1.0) in get_circle_radius_candidates(
+            (0, 0, 0), (2 + np.cos(theta), -1 + np.sin(theta), theta + 0.5 * np.pi)
+        )
+
+
+def test_get_pose_connecting_arc_by_radius():
+    # Test left turn -> right turn with r = 1.0
+    for theta in np.linspace(-np.pi, np.pi, 100):
+        assert pytest.approx(
+            (1.0, 1.0, 0.5 * np.pi)
+        ) == get_pose_connecting_arc_by_radius(
+            (0, 0, 0), (2 + np.cos(theta), 1 + np.sin(theta), theta - 0.5 * np.pi), 1.0
+        )
+
+    # Test right turn -> left turn with r = -1.0
+    for theta in np.linspace(-np.pi, np.pi, 100):
+        assert pytest.approx(
+            (1.0, -1.0, -0.5 * np.pi)
+        ) == get_pose_connecting_arc_by_radius(
+            (0, 0, 0),
+            (2 + np.cos(theta), -1 + np.sin(theta), theta + 0.5 * np.pi),
+            -1.0,
+        )
+
+
+def test_get_pose_to_connect_poses_by_arcs():
+    assert False == True, "Not implemented yet"
 
 
 def test_calculate_unicycle_final_yaw():

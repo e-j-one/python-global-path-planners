@@ -97,38 +97,69 @@ def get_circle_radius_candidates(
 
     if denominator == 0:
         if pos_diff_dot_perp_sum == 0:
-            # Could be w=0
-            print("Headings are same and perp_sum ⋅ pos_dff = 0")
+            # Could be w = 0 !
+            # print("Headings are same and perp_sum ⋅ pos_dff = 0")
             return []
-        print("Headings are same but perp_sum ⋅ pos_dff != 0")
         turning_radius = 0.5 * pos_diff_dot_pos_diff / pos_diff_dot_perp_sum
-        print("turning_radius", turning_radius)
+        # print("Headings are same but perp_sum ⋅ pos_dff != 0")
+        # print("turning_radius", turning_radius)
         return [turning_radius]
 
     discriminant = (
         4 * pos_diff_dot_pos_diff
         - (perp_sum[0] * pos_diff[1] - perp_sum[1] * pos_diff[0]) ** 2
     )
-    # print("discriminant", discriminant)
 
-    if denominator > 0:
-        turning_radius_left = (
-            pos_diff_dot_perp_sum + np.sqrt(discriminant)
-        ) / denominator
-        turning_radius_right = -(
-            (pos_diff_dot_perp_sum - np.sqrt(discriminant)) / denominator
-        )
+    turning_radius_candidates = [
+        (pos_diff_dot_perp_sum + np.sqrt(discriminant)) / denominator,
+        (pos_diff_dot_perp_sum - np.sqrt(discriminant)) / denominator,
+    ]
+
+    return turning_radius_candidates
+
+
+def get_pose_connecting_arc_by_radius(
+    pose_i: Tuple[float, float, float],
+    pose_f: Tuple[float, float, float],
+    radius: float,
+) -> Optional[Tuple[float, float, float]]:
+    """
+    Return the pose connecting pose_i and pose_f by the two arc with the same given radius
+    Parameters:
+    - pose_i: (x, y, yaw) of the initial pose
+    - pose_f: (x, y, yaw) of the final pose
+    - radius: radius of the arc (non-zero, positive for left turn first, negative for right turn first)
+    """
+    # Get the center of the circle
+    pos_i = (pose_i[0], pose_i[1])
+    pos_f = (pose_f[0], pose_f[1])
+    perp_i = (np.cos(pose_i[2] + 0.5 * np.pi), np.sin(pose_i[2] + 0.5 * np.pi))
+    perp_f = (np.cos(pose_f[2] + 0.5 * np.pi), np.sin(pose_f[2] + 0.5 * np.pi))
+
+    # Get the centers of the circle
+    center_i = (pos_i[0] + radius * perp_i[0], pos_i[1] + radius * perp_i[1])
+    center_f = (pos_f[0] - radius * perp_f[0], pos_f[1] - radius * perp_f[1])
+
+    # Get the midpoint of two centers
+    center_mid = (
+        0.5 * (center_i[0] + center_f[0]),
+        0.5 * (center_i[1] + center_f[1]),
+    )
+
+    # Get the vector from center_i to center_mid
+    vector_center_i_mid = (center_mid[0] - center_i[0], center_mid[1] - center_i[1])
+
+    # Get the yaw of the mid pose
+    # r > 0
+    if radius > 0:
+        yaw = np.arctan2(vector_center_i_mid[1], vector_center_i_mid[0]) + 0.5 * np.pi
     else:
-        turning_radius_left = (
-            pos_diff_dot_perp_sum - np.sqrt(discriminant)
-        ) / denominator
-        turning_radius_right = -(
-            (pos_diff_dot_perp_sum + np.sqrt(discriminant)) / denominator
-        )
+        yaw = np.arctan2(vector_center_i_mid[1], vector_center_i_mid[0]) - 0.5 * np.pi
 
-    print("radius left: ", turning_radius_left, " right: ", turning_radius_right)
+    print("pose_i", pose_i, "pose_f", pose_f, "center_mid", center_mid, "yaw", yaw)
+    print("center_i", center_i, "center_f", center_f)
 
-    return [turning_radius_left, turning_radius_right]
+    return (center_mid[0], center_mid[1], yaw)
 
 
 def get_pose_to_connect_poses_by_arcs(
@@ -140,6 +171,18 @@ def get_pose_to_connect_poses_by_arcs(
     """
     Return the pose to connect pose_i and pose_f by two arcs with the given constraints
     """
+
+    # 1. Get candidates turning radius of arcs
+    radius_candidates = get_circle_radius_candidates(pose_i, pose_f)
+
+    # 2. Validate & choose the valid radius
+    if len(radius_candidates) == 0:
+        return None
+
+    # Get the pose connecting two arcs
+    for radius in radius_candidates:
+        pass
+
     return
 
 
