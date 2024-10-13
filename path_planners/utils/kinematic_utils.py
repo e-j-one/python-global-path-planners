@@ -1,6 +1,7 @@
 # TODO: separate files by functionality or robot type
 
 from typing import Tuple, Optional, List
+from enum import Enum
 
 import numpy as np
 
@@ -59,6 +60,87 @@ def check_unicycle_reachability(
     ):
         return True
     return False
+
+
+def get_circle_radius_candidates(
+    pose_i: Tuple[float, float, float],
+    pose_f: Tuple[float, float, float],
+) -> List[float]:
+    """
+    Return radius candidates of two arcs that can connects pose_i and pose_f.
+    Positive for left turn first, negative for right turn first.
+
+    pose_i = (x_i, y_i, yaw_i)
+    pose_f = (x_f, y_f, yaw_f)
+
+    pos_i = (x_i, y_i)
+    pos_f = (x_f, y_f)
+    perp_i = (cos(yaw_i + 0.5*pi), sin(yaw_i + 0.5*pi))
+    perp_f = (cos(yaw_f + 0.5*pi), sin(yaw_f + 0.5*pi))
+
+    |(pos_f - r * perp_f) - (pos_i + r * perp_i)| = |2 * r|
+    |(pos_f - pos_i) - r * (perp_f + perp_i)| = |2 * r|
+    """
+    # |pos_diff - r * perp_sum| = |2 * r|
+    pos_diff = (pose_f[0] - pose_i[0], pose_f[1] - pose_i[1])
+    perp_sum = (
+        np.cos(pose_i[2] + 0.5 * np.pi) + np.cos(pose_f[2] + 0.5 * np.pi),
+        np.sin(pose_i[2] + 0.5 * np.pi) + np.sin(pose_f[2] + 0.5 * np.pi),
+    )
+
+    # (perp_sum ⋅ perp_sum - 4) * r^2 + perp_sum ⋅ pos_dff * r + pos_diff ⋅ pos_diff = 2
+    denominator = perp_sum[0] ** 2 + perp_sum[1] ** 2 - 4
+    # print("denominator", denominator)
+
+    pos_diff_dot_perp_sum = pos_diff[0] * perp_sum[0] + pos_diff[1] * perp_sum[1]
+    pos_diff_dot_pos_diff = pos_diff[0] ** 2 + pos_diff[1] ** 2
+
+    if denominator == 0:
+        if pos_diff_dot_perp_sum == 0:
+            # Could be w=0
+            print("Headings are same and perp_sum ⋅ pos_dff = 0")
+            return []
+        print("Headings are same but perp_sum ⋅ pos_dff != 0")
+        turning_radius = 0.5 * pos_diff_dot_pos_diff / pos_diff_dot_perp_sum
+        print("turning_radius", turning_radius)
+        return [turning_radius]
+
+    discriminant = (
+        4 * pos_diff_dot_pos_diff
+        - (perp_sum[0] * pos_diff[1] - perp_sum[1] * pos_diff[0]) ** 2
+    )
+    # print("discriminant", discriminant)
+
+    if denominator > 0:
+        turning_radius_left = (
+            pos_diff_dot_perp_sum + np.sqrt(discriminant)
+        ) / denominator
+        turning_radius_right = -(
+            (pos_diff_dot_perp_sum - np.sqrt(discriminant)) / denominator
+        )
+    else:
+        turning_radius_left = (
+            pos_diff_dot_perp_sum - np.sqrt(discriminant)
+        ) / denominator
+        turning_radius_right = -(
+            (pos_diff_dot_perp_sum + np.sqrt(discriminant)) / denominator
+        )
+
+    print("radius left: ", turning_radius_left, " right: ", turning_radius_right)
+
+    return [turning_radius_left, turning_radius_right]
+
+
+def get_pose_to_connect_poses_by_arcs(
+    pose_i: Tuple[float, float, float],
+    pose_f: Tuple[float, float, float],
+    min_linear_velocity: float,
+    max_angular_velocity: float,
+):
+    """
+    Return the pose to connect pose_i and pose_f by two arcs with the given constraints
+    """
+    return
 
 
 def calculate_unicycle_final_yaw(
