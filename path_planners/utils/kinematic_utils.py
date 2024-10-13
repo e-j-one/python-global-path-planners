@@ -122,9 +122,10 @@ def get_pose_connecting_arc_by_radius(
     pose_i: Tuple[float, float, float],
     pose_f: Tuple[float, float, float],
     radius: float,
-) -> Optional[Tuple[float, float, float]]:
+) -> Tuple[float, float, float]:
     """
     Return the pose connecting pose_i and pose_f by the two arc with the same given radius
+
     Parameters:
     - pose_i: (x, y, yaw) of the initial pose
     - pose_f: (x, y, yaw) of the final pose
@@ -154,8 +155,8 @@ def get_pose_connecting_arc_by_radius(
     else:
         yaw = np.arctan2(vector_center_i_mid[1], vector_center_i_mid[0]) - 0.5 * np.pi
 
-    print("pose_i", pose_i, "pose_f", pose_f, "center_mid", center_mid, "yaw", yaw)
-    print("center_i", center_i, "center_f", center_f)
+    # print("pose_i", pose_i, "pose_f", pose_f, "center_mid", center_mid, "yaw", yaw)
+    # print("center_i", center_i, "center_f", center_f)
 
     return (center_mid[0], center_mid[1], yaw)
 
@@ -166,6 +167,7 @@ def get_pose_path_length_of_arc(
 ) -> float:
     """
     Given two poses, return the path length of the arc connecting the two poses
+
     Returns:
     - path_length: path length of the arc
     """
@@ -198,14 +200,20 @@ def get_pose_path_length_of_arc(
         return -turning_radius * angle_diff
 
 
-def get_pose_to_connect_poses_by_arcs(
+def get_two_arcs_connecting_poses(
     pose_i: Tuple[float, float, float],
     pose_f: Tuple[float, float, float],
-    min_linear_velocity: float,
-    max_angular_velocity: float,
-):
+    min_turning_radius: float,
+) -> Optional[Tuple[Tuple[float, float, float], float, float]]:
     """
-    Return the pose to connect pose_i and pose_f by two arcs with the given constraints
+    Get two arcs with the same radius connecting pose_i and pose_f
+    - that has the minimum path length
+    - while satisfying the velocity constraints.
+
+    Returns: None if there is no valid path or path can be connected by a straight line
+    - pose_stopover: pose to stopover
+    - path_length: path length of the arcs
+    - radius: radius of the arc
     """
 
     # 1. Get candidates turning radius of arcs
@@ -215,11 +223,28 @@ def get_pose_to_connect_poses_by_arcs(
     if len(radius_candidates) == 0:
         return None
 
-    # Get the pose connecting two arcs
-    for radius in radius_candidates:
-        pass
+    optimal_path_length = np.inf
+    optimal_pose = None
+    optimal_radius = None
 
-    return
+    for radius in radius_candidates:
+        if abs(radius) < min_turning_radius:
+            continue
+
+        # Get the pose connecting two arcs
+        pose_stopover = get_pose_connecting_arc_by_radius(pose_i, pose_f, radius)
+        path_length_of_candidate = get_pose_path_length_of_arc(
+            pose_i, pose_stopover[:2]
+        ) + get_pose_path_length_of_arc(pose_stopover, pose_f[:2])
+
+        if path_length_of_candidate < optimal_path_length:
+            optimal_path_length = path_length_of_candidate
+            optimal_pose = pose_stopover
+            optimal_radius = radius
+
+    if optimal_pose is None:
+        return None
+    return (optimal_pose, optimal_path_length, optimal_radius)
 
 
 def calculate_unicycle_final_yaw(
@@ -273,10 +298,12 @@ def calculate_unicycle_w_yaw(
 ) -> Tuple[float, float]:
     """
     Return angular velocity and yaw of final pos to reach pos_f from pose_i with the given linear velocity
+
     Parameters:
     - pose_i: (x, y, yaw) of the initial pose
     - pos_f: (x, y) of the final position
     - linear_velocity: linear velocity of the robot
+
     Returns:
     - angular_velocity: angular velocity to reach pos_f from pose_i
     - yaw: yaw of the final position
