@@ -159,14 +159,32 @@ def test_get_pose_connecting_arc_by_radius():
 
 
 def test_get_pose_path_length_of_arc():
-    # Test same position
-    assert get_pose_path_length_of_arc((0.0, 0.0, 0.0), (0.0, 0.0)) == pytest.approx(0.0)
-    assert get_pose_path_length_of_arc((0.0, 0.0, 0.0), (1.0, 1.0)) == pytest.approx(
+    # Test along left turn circle with r = 1.0
+    pose_i = (0.0, 0.0, 0.0)
+    assert get_pose_path_length_of_arc(pose_i, (0.0, 0.0)) == pytest.approx(0.0)
+    assert get_pose_path_length_of_arc(pose_i, (1.0, 1.0)) == pytest.approx(0.5 * np.pi)
+    assert get_pose_path_length_of_arc(pose_i, (0.0, 2.0)) == pytest.approx(np.pi)
+    assert get_pose_path_length_of_arc(pose_i, (-1.0, 1.0)) == pytest.approx(
+        1.5 * np.pi
+    )
+    # Test along right turn circle with r = 1.0
+    pose_i = (0.0, 0.0, 0.0)
+    assert get_pose_path_length_of_arc(pose_i, (1.0, -1.0)) == pytest.approx(
         0.5 * np.pi
     )
-    assert get_pose_path_length_of_arc((0.0, 0.0, 0.0), (1.0, -1.0)) == pytest.approx(
-        0.5 * np.pi
+    assert get_pose_path_length_of_arc(pose_i, (0.0, -2.0)) == pytest.approx(np.pi)
+    assert get_pose_path_length_of_arc(pose_i, (-1.0, -1.0)) == pytest.approx(
+        1.5 * np.pi
     )
+
+    # Test along axis of heading direction
+    pose_i = (0.0, 0.0, 0.0)
+    assert get_pose_path_length_of_arc(pose_i, (1.0, 0.0)) == pytest.approx(1.0)
+    assert get_pose_path_length_of_arc(pose_i, (2.0, 0.0)) == pytest.approx(2.0)
+    assert get_pose_path_length_of_arc(pose_i, (4.0, 0.0)) == pytest.approx(4.0)
+    assert get_pose_path_length_of_arc(pose_i, (-1.0, 0.0)) == np.inf
+    assert get_pose_path_length_of_arc(pose_i, (-2.0, 0.0)) == np.inf
+    assert get_pose_path_length_of_arc(pose_i, (-4.0, 0.0)) == np.inf
 
 
 def test_get_pose_to_connect_poses_by_arcs():
