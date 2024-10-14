@@ -20,6 +20,9 @@ Until goal is reached or max_iter is reached:
 6. Add the new node to the tree with the parent node
     - The heading of the new node is assigned by the path from the parent node chosen for that node.
 7. Rewire the tree
+    - To check if two pose can be connected, try connecting poses only using the two arc.
+    - If the pose connecting two arc (the intersection pose) is within dist_near from both poses, they can be rewired.
+    - If rewired, the pose connecting two arcs is also added as a node.
 
 #### Difference from RRT*-Unicycle (Yokoyama, 2023)
 - Robot does not pivot.
@@ -31,5 +34,7 @@ Until goal is reached or max_iter is reached:
 bash run_tests.sh
 ```
 
+# TODO
+Rename check_unicycle_reachability -> check_unicycle_pos_reachability
 # References
 [RRT*-unicycle](https://github.com/naokiyokoyama/rrt_star)
