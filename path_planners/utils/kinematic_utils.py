@@ -193,10 +193,10 @@ def get_pose_path_length_of_arc(
     angle_diff = pos_f_yaw - pose_i[2]
     # Normalize the angle difference to [0, 2pi)
     if delta_i_f > 0:  # left turn
-        angle_diff = angle_diff % (2 * np.pi)
+        angle_diff = MathUtils.normalize_angle_positive(angle_diff)
         return turning_radius * angle_diff
     else:
-        angle_diff = (-angle_diff) % (2 * np.pi)
+        angle_diff = MathUtils.normalize_angle_positive(-angle_diff)
         return -turning_radius * angle_diff
 
 
@@ -270,22 +270,11 @@ def calculate_unicycle_path_angular_velocity(
     """
     Given the pose_i, pos_f and linear velocity, return the angular velocity (w) and yaw to reach pos_f from pose_i
     1. Calculate radius (=r) of the path
-        - r = 0.5 * dist_i_f / sin(delta_i_f)
-        - r is positive if pos_f is in the left side of the heading direction of pose_i
     2. w = v_x / r
     """
-    # 1. Calculate radius of the circle with center at +-r in the y direction from the pose_i
-    vector_i_f = np.array(pos_f) - np.array([pose_i[0], pose_i[1]])
-    dist_i_f = np.linalg.norm(vector_i_f)
-    if dist_i_f < 1e-12:
+    turning_radius = GeometryUtils.calculate_arc_path_radius(pose_i, pos_f)
+    if turning_radius == 0:  # Straight line
         return 0.0
-
-    # delta_i_f: angle difference between heading direction of pose_i and vector_i_f in -pi to pi
-    delta_i_f = GeometryUtils.calculate_delta_i_f(pose_i, pos_f)
-    if abs(np.sin(delta_i_f)) < 1e-12:
-        return 0.0
-
-    turning_radius = 0.5 * dist_i_f / np.sin(delta_i_f)
     angular_velocity = linear_velocity / turning_radius
 
     return angular_velocity
@@ -311,3 +300,79 @@ def calculate_unicycle_w_yaw(
     return calculate_unicycle_path_angular_velocity(
         pose_i, pos_f, linear_velocity
     ), calculate_unicycle_final_yaw(pose_i, pos_f)
+
+
+def get_straingt_path(
+    pose_i: Tuple[float, float, float], pos_f: Tuple[float, float], d_s: float
+) -> List[Tuple[float, float, float]]:
+    """
+    Get the straight line path from pose_i to pos_f where s
+    """
+    vector_i_f = (pos_f[0] - pose_i[0], pos_f[1] - pose_i[1])
+    dist_i_f = np.linalg.norm(vector_i_f)
+    if dist_i_f == 0:
+        return [pose_i]
+    unit_i_f = (vector_i_f[0] / dist_i_f, vector_i_f[1] / dist_i_f)
+
+    if not GeometryUtils.check_if_pos_in_same_side_of_heading(pose_i, pos_f):
+        raise ValueError(
+            "The pose_i and pos_f are not in the same side of the heading direction"
+        )
+
+    num_steps = int(dist_i_f // d_s)
+    path = [pose_i]
+
+    for i in range(num_steps):
+        s = (i + 1) * d_s
+        x = pose_i[0] + s * unit_i_f[0]
+        y = pose_i[1] + s * unit_i_f[1]
+        path.append((x, y, pose_i[2]))
+
+    return path
+
+
+def get_unicycle_path(
+    pose_i: Tuple[float, float, float], pos_f: Tuple[float, float], d_s: float
+) -> List[Tuple[float, float, float]]:
+    """
+    Get the arc path from pose_i to pos_f.
+    1. Calculate the radius of the arc
+    2. Calculate the angle difference per each step
+    3. Generate the path with the angle difference until reaching the pos_f
+    """
+
+    turning_radius = GeometryUtils.calculate_arc_path_radius(pose_i, pos_f)
+    print("turning_radius", turning_radius)
+    if turning_radius == np.inf:  # Straight line
+        return get_straingt_path(pose_i, pos_f, d_s)
+
+    if turning_radius == 0:  # Same position
+        return [pose_i]
+
+    turning_center = (
+        pose_i[0] + turning_radius * np.cos(pose_i[2] + 0.5 * np.pi),
+        pose_i[1] + turning_radius * np.sin(pose_i[2] + 0.5 * np.pi),
+    )
+
+    theta_start = pose_i[2] - 0.5 * np.pi
+    theta_goal = np.arctan2(pos_f[1] - turning_center[1], pos_f[0] - turning_center[0])
+    d_theta = d_s / turning_radius
+
+    theta_diff = MathUtils.normalize_angle_positive(theta_goal - theta_start)
+    if turning_radius > 0:
+        num_steps = int(theta_diff // d_theta)
+    else:
+        num_steps = int(theta_diff // (-d_theta))
+    path = [pose_i]
+
+    for i in range(num_steps):
+        theta = theta_start + (i + 1) * d_theta
+        next_pose = (
+            turning_center[0] + turning_radius * np.cos(theta),
+            turning_center[1] + turning_radius * np.sin(theta),
+            pose_i[2] + theta + 0.5 * np.pi,
+        )
+        path.append(next_pose)
+
+    print("path", path)
+    return path

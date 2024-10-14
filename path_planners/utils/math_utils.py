@@ -12,3 +12,15 @@ def normalize_angle(angle: float) -> float:
     if normalize_angle == -np.pi:
         return np.pi
     return normalize_angle
+
+
+def normalize_angle_positive(angle: float) -> float:
+    """
+    Normalize the angle to [0, 2pi)
+    """
+    if angle >= 0 and angle < 2 * np.pi:
+        return angle
+    print("angle", angle)
+    normalize_angle_positive = angle % (2 * np.pi)
+    print("normalize_angle_positive", normalize_angle_positive)
+    return normalize_angle_positive
