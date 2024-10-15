@@ -1,4 +1,4 @@
-# Python Global Path Planners
+# [WIP] Python Global Path Planners
 
 ## Implemented Algorithms
 
