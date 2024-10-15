@@ -5,6 +5,8 @@ from path_planners.utils.geometry_utils import (
     calculate_delta_i_f,
     calculate_arc_path_radius,
     check_if_dist_is_below_threshold,
+    check_if_angle_diff_is_below_threshold,
+    check_if_dist_and_angle_diff_are_below_threshold,
     check_if_pos_in_same_side_of_heading,
 )
 
@@ -96,9 +98,42 @@ def test_calculate_arc_path_radius():
 
 
 def test_check_if_dist_is_below_threshold():
-    assert check_if_dist_is_below_threshold((0.0, 0.0, 0.0), (0.0, 0.0), 1e-6) == True
-    assert check_if_dist_is_below_threshold((0.0, 0.0, 0.0), (0.0, 0.01), 1e-6) == False
-    assert check_if_dist_is_below_threshold((0.0, 0.0, 0.0), (0.0, 1e-6), 1e-6) == False
+    assert check_if_dist_is_below_threshold((0.0, 0.0), (0.0, 0.0), 1e-6) == True
+    assert check_if_dist_is_below_threshold((0.0, 0.0), (0.0, 0.01), 1e-6) == False
+    assert check_if_dist_is_below_threshold((0.0, 0.0), (0.0, 1e-6), 1e-6) == False
+
+
+def test_check_if_angle_diff_is_below_threshold():
+    assert check_if_angle_diff_is_below_threshold(0.0, 0.1 * np.pi, 0.2 * np.pi) == True
+    assert (
+        check_if_angle_diff_is_below_threshold(0.0, -0.1 * np.pi, 0.2 * np.pi) == True
+    )
+
+    assert check_if_angle_diff_is_below_threshold(0.0, 2.0 * np.pi, 1e-6) == True
+    assert check_if_angle_diff_is_below_threshold(0.0, -2.0 * np.pi, 1e-6) == True
+    assert check_if_angle_diff_is_below_threshold(2.0 * np.pi, 0.0, 1e-6) == True
+    assert check_if_angle_diff_is_below_threshold(-2.0 * np.pi, 0.0, 1e-6) == True
+    assert (
+        check_if_angle_diff_is_below_threshold(2.0 * np.pi, -2.0 * np.pi, 1e-6) == True
+    )
+
+    assert check_if_angle_diff_is_below_threshold(0.0, 1e-6, 1e-6) == False
+
+
+def test_check_if_dist_and_angle_diff_are_below_threshold():
+    pose_i = (0.0, 0.0, 0.0)
+    pose_f = (0.1, 0.1, 0.1 * np.pi)
+
+    assert (
+        check_if_dist_and_angle_diff_are_below_threshold(pose_i, pose_f, 1e-6, 1e-6)
+        == False
+    )
+    assert (
+        check_if_dist_and_angle_diff_are_below_threshold(
+            pose_i, pose_f, 0.2, 0.2 * np.pi
+        )
+        == True
+    )
 
 
 def test_check_if_pos_in_same_side_of_heading():

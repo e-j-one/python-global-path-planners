@@ -7,6 +7,7 @@ import numpy as np
 
 import path_planners.utils.geometry_utils as GeometryUtils
 import path_planners.utils.math_utils as MathUtils
+import path_planners.utils.debug_utils as DebugUtils
 
 
 def check_unicycle_reachability(
@@ -342,7 +343,6 @@ def get_unicycle_path(
     """
 
     turning_radius = GeometryUtils.calculate_arc_path_radius(pose_i, pos_f)
-    print("turning_radius", turning_radius)
     if turning_radius == np.inf:  # Straight line
         return get_straingt_path(pose_i, pos_f, d_s)
 
@@ -354,25 +354,39 @@ def get_unicycle_path(
         pose_i[1] + turning_radius * np.sin(pose_i[2] + 0.5 * np.pi),
     )
 
-    theta_start = pose_i[2] - 0.5 * np.pi
     theta_goal = np.arctan2(pos_f[1] - turning_center[1], pos_f[0] - turning_center[0])
     d_theta = d_s / turning_radius
 
-    theta_diff = MathUtils.normalize_angle_positive(theta_goal - theta_start)
-    if turning_radius > 0:
-        num_steps = int(theta_diff // d_theta)
-    else:
-        num_steps = int(theta_diff // (-d_theta))
+    radius_dir_sign = np.sign(turning_radius)
+
+    theta_start = MathUtils.normalize_angle(pose_i[2] - radius_dir_sign * 0.5 * np.pi)
+    theta_diff = MathUtils.normalize_angle_positive(
+        radius_dir_sign * (theta_goal - theta_start)
+    )
+    num_steps = int(theta_diff // (radius_dir_sign * d_theta))
+
     path = [pose_i]
 
     for i in range(num_steps):
         theta = theta_start + (i + 1) * d_theta
+
         next_pose = (
-            turning_center[0] + turning_radius * np.cos(theta),
-            turning_center[1] + turning_radius * np.sin(theta),
-            pose_i[2] + theta + 0.5 * np.pi,
+            turning_center[0] + radius_dir_sign * turning_radius * np.cos(theta),
+            turning_center[1] + radius_dir_sign * turning_radius * np.sin(theta),
+            MathUtils.normalize_angle(theta + radius_dir_sign * 0.5 * np.pi),
         )
         path.append(next_pose)
 
-    print("path", path)
+    print("================================")
+    print(f"pose_i: {pose_i} pose_f: {pos_f}")
+    print("turning_radius", turning_radius)
+    print("turning_center", turning_center)
+    print("radius_dir_sign", radius_dir_sign)
+    print(
+        f"theta start: {theta_start:.2f}, theta goal: {theta_goal:.2f}, theta_diff: {theta_diff:.2f} d_theta: {d_theta:.2f}"
+    )
+    print(f"num_steps: {num_steps}")
+    print("path: ")
+    DebugUtils.print_path(path)
+
     return path

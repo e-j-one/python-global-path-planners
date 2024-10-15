@@ -51,17 +51,45 @@ def calculate_arc_path_radius(
 
 
 def check_if_dist_is_below_threshold(
-    pose_i: Tuple[float, float, float], pos_f: Tuple[float, float], threshold: float
+    pos_i: Tuple[float, float], pos_f: Tuple[float, float], threshold: float
 ):
     """
-    Check if the pose_i is near the pos_f within the threshold (dist < threshold)
+    Check if the pos_i is near the pos_f within the threshold (dist < threshold)
 
     Parameters:
-    - pose_i: (x, y, yaw) of the initial pose
+    - pos_i: (x, y) of the initial pose
     - pos_f: (x, y) of the final position
-    - threshold: threshold distance to check if the pose_i is near pos_f
+    - threshold: threshold distance to check if the pos_i is near pos_f
     """
-    return np.linalg.norm(np.array(pose_i[:2]) - np.array(pos_f)) < threshold
+    return np.linalg.norm(np.array(pos_i[:2]) - np.array(pos_f)) < threshold
+
+
+def check_if_angle_diff_is_below_threshold(
+    angle_i: float, angle_f: float, threshold: float
+):
+    """
+    Check if the angle_i is near the angle_f within the threshold (abs(angle_i - angle_f) < threshold)
+
+    Parameters:
+    - angle_i: initial angle
+    - angle_f: final angle
+    - threshold: threshold angle difference to check if the angle_i is near angle_f
+    """
+    return abs(MathUtils.normalize_angle(angle_i - angle_f)) < threshold
+
+
+def check_if_dist_and_angle_diff_are_below_threshold(
+    pose_i: Tuple[float, float, float],
+    pose_f: Tuple[float, float, float],
+    dist_threshold: float,
+    angle_threshold: float,
+):
+    """
+    Check if the pose_i is near the pose_f within the threshold (dist < dist_threshold) and (angle_i - angle_f < angle_threshold)
+    """
+    return check_if_dist_is_below_threshold(
+        pose_i[:2], pose_f[:2], dist_threshold
+    ) and check_if_angle_diff_is_below_threshold(pose_i[2], pose_f[2], angle_threshold)
 
 
 def check_if_pos_in_same_side_of_heading(

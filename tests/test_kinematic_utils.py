@@ -369,9 +369,10 @@ def test_get_straingt_path():
 
 
 def test_get_unicycle_path():
-    # Test arc with r = 1.0
-    pose_i = (0.0, 0.0, 0.0)
+    # ==================== Test arc with r = 1.0 ====================
     d_s = 0.25 * np.pi
+
+    pose_i = (0.0, 0.0, 0.0)
     pos_f = (1.0, 1.0)
     label_path = np.array(
         [
@@ -395,18 +396,35 @@ def test_get_unicycle_path():
             (1.0, 1.0, 0.5 * np.pi),
             (0.5 * np.sqrt(2.0), 1.0 + 0.5 * np.sqrt(2.0), 0.75 * np.pi),
             (0.0, 2.0, 1.0 * np.pi),
-            (-0.5 * np.sqrt(2.0), 1.0 + 0.5 * np.sqrt(2.0), 1.25 * np.pi),
-            (-1.0, 1.0, 1.5 * np.pi),
-            (-0.5 * np.sqrt(2.0), 1.0 - 0.5 * np.sqrt(2.0), 1.75 * np.pi),
+            (-0.5 * np.sqrt(2.0), 1.0 + 0.5 * np.sqrt(2.0), -0.75 * np.pi),
+            (-1.0, 1.0, -0.5 * np.pi),
+            (-0.5 * np.sqrt(2.0), 1.0 - 0.5 * np.sqrt(2.0), -0.25 * np.pi),
+        ]
+    )
+    label_path_pi_to_minus_pi = np.where(label_path == np.pi, -np.pi, label_path)
+
+    answer_path = np.array(get_unicycle_path(pose_i, pos_f, d_s))
+    assert answer_path == pytest.approx(label_path) or answer_path == pytest.approx(
+        label_path_pi_to_minus_pi
+    )
+
+    pose_i = (0.0, 0.0, np.pi)
+    pos_f = (-1.0, -1.0)
+    label_path = np.array(
+        [
+            (0.0, 0.0, np.pi),
+            (-0.5 * np.sqrt(2.0), -1.0 + 0.5 * np.sqrt(2.0), -0.75 * np.pi),
+            (-1.0, -1.0, -0.5 * np.pi),
         ]
     )
     answer_path = np.array(get_unicycle_path(pose_i, pos_f, d_s))
     assert answer_path == pytest.approx(label_path)
 
-    # Test arc with r = -1.0
+    # ==================== Test arc with r = -1.0 ====================
+    d_s = 0.25 * np.pi
+
     pose_i = (0.0, 0.0, 0.0)
     pos_f = (1.0, -1.0)
-    d_s = 0.25 * np.pi
     label_path = np.array(
         [
             (0.0, 0.0, 0.0),
@@ -417,7 +435,19 @@ def test_get_unicycle_path():
     answer_path = np.array(get_unicycle_path(pose_i, pos_f, d_s))
     assert answer_path == pytest.approx(label_path)
 
-    # Test straight path
+    pose_i = (0.0, 0.0, np.pi)
+    pos_f = (-1.0, 1.0)
+    label_path = np.array(
+        [
+            (0.0, 0.0, np.pi),
+            (-0.5 * np.sqrt(2.0), 1.0 - 0.5 * np.sqrt(2.0), 0.75 * np.pi),
+            (-1.0, 1.0, 0.5 * np.pi),
+        ]
+    )
+    answer_path = np.array(get_unicycle_path(pose_i, pos_f, d_s))
+    assert answer_path == pytest.approx(label_path)
+
+    # ==================== Test straight path ====================
     d_s = 1.0
 
     pose_i = (0.0, 0.0, 0.0)
