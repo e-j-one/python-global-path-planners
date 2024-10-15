@@ -10,6 +10,8 @@ from path_planners.utils.kinematic_utils import (
     calculate_unicycle_final_yaw,
     calculate_unicycle_path_angular_velocity,
     calculate_unicycle_w_yaw,
+    get_straingt_path,
+    get_unicycle_path,
 )
 
 
@@ -317,3 +319,146 @@ def test_calculate_unicycle_path_angular_velocity():
 def test_calculate_unicycle_w_yaw():
     assert calculate_unicycle_w_yaw((0.0, 0.0, 0.0), (1, 0), 1.0) == (0.0, 0.0)
     assert calculate_unicycle_w_yaw((0.0, 0.0, 0.0), (0, 2.0), 1.0) == (1.0, np.pi)
+
+
+def test_get_straingt_path():
+    d_s = 1.0
+
+    pose_i = (0.0, 0.0, 0.0)
+    pos_f = (4.0, 0.0)
+    label_path = [
+        (0.0, 0.0, 0.0),
+        (1.0, 0.0, 0.0),
+        (2.0, 0.0, 0.0),
+        (3.0, 0.0, 0.0),
+        (4.0, 0.0, 0.0),
+    ]
+    assert get_straingt_path(pose_i, pos_f, d_s) == label_path
+    pos_f = (4.1, 0.0)
+    assert get_straingt_path(pose_i, pos_f, d_s) == label_path
+    pos_f = (4.99, 0.0)
+    assert get_straingt_path(pose_i, pos_f, d_s) == label_path
+
+    pose_i = (0.0, 0.0, 0.5 * np.pi)
+    pos_f = (0.0, 4.0)
+    label_path = [
+        (0.0, 0.0, 0.5 * np.pi),
+        (0.0, 1.0, 0.5 * np.pi),
+        (0.0, 2.0, 0.5 * np.pi),
+        (0.0, 3.0, 0.5 * np.pi),
+        (0.0, 4.0, 0.5 * np.pi),
+    ]
+    assert get_straingt_path(pose_i, pos_f, d_s) == label_path
+
+    # Test edge cases: pos_f is in the opposite direction of the heading direction
+    pose_i = (0.0, 0.0, 0.0)
+    pos_f = (-1.0, 0.0)
+    with pytest.raises(ValueError):
+        get_straingt_path(pose_i, pos_f, d_s)
+    pos_f = (-0.1, 0.0)
+    with pytest.raises(ValueError):
+        get_straingt_path(pose_i, pos_f, d_s)
+
+    # Test edge cases: pos_f is in the same position as pose_i
+    pose_i = (0.0, 0.0, 0.0)
+    pos_f = (0.0, 0.0)
+    assert get_straingt_path(pose_i, pos_f, d_s) == [pose_i]
+    pose_i = (0.0, 0.0, 0.5 * np.pi)
+    pos_f = (0.0, 0.0)
+    assert get_straingt_path(pose_i, pos_f, d_s) == [pose_i]
+
+
+def test_get_unicycle_path():
+    # Test arc with r = 1.0
+    pose_i = (0.0, 0.0, 0.0)
+    d_s = 0.25 * np.pi
+    pos_f = (1.0, 1.0)
+    label_path = np.array(
+        [
+            (0.0, 0.0, 0.0),
+            (0.5 * np.sqrt(2.0), 1.0 - 0.5 * np.sqrt(2.0), 0.25 * np.pi),
+            (1.0, 1.0, 0.5 * np.pi),
+        ]
+    )
+    answer_path = np.array(get_unicycle_path(pose_i, pos_f, d_s))
+    assert answer_path == pytest.approx(label_path)
+
+    pos_f = (np.cos(0.1 * np.pi), 1.0 + np.sin(0.1 * np.pi))
+    answer_path = np.array(get_unicycle_path(pose_i, pos_f, d_s))
+    assert answer_path == pytest.approx(label_path)
+
+    pos_f = (np.cos(1.4 * np.pi), 1.0 + np.sin(1.4 * np.pi))
+    label_path = np.array(
+        [
+            (0.0, 0.0, 0.0),
+            (0.5 * np.sqrt(2.0), 1.0 - 0.5 * np.sqrt(2.0), 0.25 * np.pi),
+            (1.0, 1.0, 0.5 * np.pi),
+            (0.5 * np.sqrt(2.0), 1.0 + 0.5 * np.sqrt(2.0), 0.75 * np.pi),
+            (0.0, 2.0, 1.0 * np.pi),
+            (-0.5 * np.sqrt(2.0), 1.0 + 0.5 * np.sqrt(2.0), 1.25 * np.pi),
+            (-1.0, 1.0, 1.5 * np.pi),
+            (-0.5 * np.sqrt(2.0), 1.0 - 0.5 * np.sqrt(2.0), 1.75 * np.pi),
+        ]
+    )
+    answer_path = np.array(get_unicycle_path(pose_i, pos_f, d_s))
+    assert answer_path == pytest.approx(label_path)
+
+    # Test arc with r = -1.0
+    pose_i = (0.0, 0.0, 0.0)
+    pos_f = (1.0, -1.0)
+    d_s = 0.25 * np.pi
+    label_path = np.array(
+        [
+            (0.0, 0.0, 0.0),
+            (0.5 * np.sqrt(2.0), -1.0 + 0.5 * np.sqrt(2.0), -0.25 * np.pi),
+            (1.0, -1.0, -0.5 * np.pi),
+        ]
+    )
+    answer_path = np.array(get_unicycle_path(pose_i, pos_f, d_s))
+    assert answer_path == pytest.approx(label_path)
+
+    # Test straight path
+    d_s = 1.0
+
+    pose_i = (0.0, 0.0, 0.0)
+    pos_f = (4.0, 0.0)
+    label_path = [
+        (0.0, 0.0, 0.0),
+        (1.0, 0.0, 0.0),
+        (2.0, 0.0, 0.0),
+        (3.0, 0.0, 0.0),
+        (4.0, 0.0, 0.0),
+    ]
+    assert get_unicycle_path(pose_i, pos_f, d_s) == label_path
+    pos_f = (4.1, 0.0)
+    assert get_unicycle_path(pose_i, pos_f, d_s) == label_path
+    pos_f = (4.99, 0.0)
+    assert get_unicycle_path(pose_i, pos_f, d_s) == label_path
+
+    pose_i = (0.0, 0.0, 0.5 * np.pi)
+    pos_f = (0.0, 4.0)
+    label_path = [
+        (0.0, 0.0, 0.5 * np.pi),
+        (0.0, 1.0, 0.5 * np.pi),
+        (0.0, 2.0, 0.5 * np.pi),
+        (0.0, 3.0, 0.5 * np.pi),
+        (0.0, 4.0, 0.5 * np.pi),
+    ]
+    assert get_unicycle_path(pose_i, pos_f, d_s) == label_path
+
+    # Test edge cases: pos_f is in the opposite direction of the heading direction
+    pose_i = (0.0, 0.0, 0.0)
+    pos_f = (-1.0, 0.0)
+    with pytest.raises(ValueError):
+        get_unicycle_path(pose_i, pos_f, d_s)
+    pos_f = (-0.1, 0.0)
+    with pytest.raises(ValueError):
+        get_unicycle_path(pose_i, pos_f, d_s)
+
+    # Test edge cases: pos_f is in the same position as pose_i
+    pose_i = (0.0, 0.0, 0.0)
+    pos_f = (0.0, 0.0)
+    assert get_unicycle_path(pose_i, pos_f, d_s) == [pose_i]
+    pose_i = (0.0, 0.0, 0.5 * np.pi)
+    pos_f = (0.0, 0.0)
+    assert get_unicycle_path(pose_i, pos_f, d_s) == [pose_i]
