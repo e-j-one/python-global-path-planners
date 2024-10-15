@@ -1,13 +1,11 @@
 # TODO: separate files by functionality or robot type
 
 from typing import Tuple, Optional, List
-from enum import Enum
 
 import numpy as np
 
 import path_planners.utils.geometry_utils as GeometryUtils
 import path_planners.utils.math_utils as MathUtils
-import path_planners.utils.debug_utils as DebugUtils
 
 
 def check_unicycle_reachability(
@@ -377,16 +375,16 @@ def get_unicycle_path(
         )
         path.append(next_pose)
 
-    print("================================")
-    print(f"pose_i: {pose_i} pose_f: {pos_f}")
-    print("turning_radius", turning_radius)
-    print("turning_center", turning_center)
-    print("radius_dir_sign", radius_dir_sign)
-    print(
-        f"theta start: {theta_start:.2f}, theta goal: {theta_goal:.2f}, theta_diff: {theta_diff:.2f} d_theta: {d_theta:.2f}"
-    )
-    print(f"num_steps: {num_steps}")
-    print("path: ")
-    DebugUtils.print_path(path)
+    # print("================================")
+    # print(f"pose_i: {pose_i} pose_f: {pos_f}")
+    # print("turning_radius", turning_radius)
+    # print("turning_center", turning_center)
+    # print("radius_dir_sign", radius_dir_sign)
+    # print(
+    #     f"theta start: {theta_start:.2f}, theta goal: {theta_goal:.2f}, theta_diff: {theta_diff:.2f} d_theta: {d_theta:.2f}"
+    # )
+    # print(f"num_steps: {num_steps}")
+    # print("path: ")
+    # DebugUtils.print_path(path)
 
     return path

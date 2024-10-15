@@ -76,7 +76,7 @@ class RrtUnicyclePlanner(PathPlanner):
         edge_paths = []
 
         for sample_iter in range(self._max_iter):
-            if sample_iter % 1 == 0:
+            if sample_iter % 1000 == 0:
                 print("sample_iter: ", sample_iter)
                 self._plot_tree_with_edge_paths(start_pose, goal_pose, edge_paths)
 
@@ -136,6 +136,8 @@ class RrtUnicyclePlanner(PathPlanner):
                 if not self._tree.check_if_pose_in_tree(goal_pose):
                     self._tree.add_node(goal_pose, new_node_idx)
                 break
+
+        self._plot_tree_with_edge_paths(start_pose, goal_pose, edge_paths)
 
         if path_found:
             print("Goal is reached !!!")
