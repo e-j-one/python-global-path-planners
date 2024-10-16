@@ -15,6 +15,13 @@ Until goal is reached or max_iter is reached:
 ### RRT*
 For unicycle robot.
 
+<p align="center">
+  <img width="40%" src="docs/figures/rrt_star_smooth_unicycle_tree.png" align="center" alt="fig1" />
+  <img width="40%" src="docs/figures/rrt_star_smooth_unicycle_path.png" align="center" alt="fig2" />
+  <figcaption align="center">Fig. 1: RRT*-SmoothUnicycle tree and path with path length as a cost.</figcaption>
+</p>
+
+
 1. Sample a random point (x, y).
 2. Find the nearest node (by position) in the tree to the random point.
 3. Drive from the nearest node towards the random point and get new node position.

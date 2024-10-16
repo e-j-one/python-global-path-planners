@@ -27,12 +27,12 @@ if __name__ == "__main__":
     # plot_occupancy_grid(occupancy_map, resolution, origin)
 
     rrt_unicycle_config = {
-        "terminate_on_goal_reached": True,
+        "terminate_on_goal_reached": False,
         "goal_reach_dist_threshold": 0.5,
         "goal_reach_angle_threshold": 0.1 * np.pi,
         "occupancy_map_obstacle_padding_dist": 0.5,
         "goal_sample_rate": 0.1,
-        "max_iter": int(5000),
+        "max_iter": int(8000),
         "max_drive_dist": 0.5,
         "linear_velocity": 1.0,
         "max_angular_velocity": 4.0,
