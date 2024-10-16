@@ -38,7 +38,15 @@ class RrtUnicyclePlanner(PathPlanner):
         self._max_angular_velocity = max_angular_velocity
         self._render_tree_during_planning = render_tree_during_planning
 
+        self._update_min_turning_radius()
         self._tree = RrtTree()
+
+    def _update_min_turning_radius(self):
+        if self._max_angular_velocity <= 0.0:
+            raise ValueError("max_angular_velocity should be positive!")
+        if self._linear_velocity <= 0.0:
+            raise ValueError("linear_velocity should be positive!")
+        self._min_turning_radius = self._linear_velocity / self._max_angular_velocity
 
     def set_occupancy_map(self, occupancy_map, resolution, origin):
         return super().set_occupancy_map(occupancy_map, resolution, origin)

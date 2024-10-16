@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, List
 
 
 class RrtNode:
@@ -36,7 +36,7 @@ class RrtNode:
         "Return the index of the parent node"
         return self._parent
 
-    def get_children(self) -> int:
+    def get_children(self) -> List[int]:
         return self._children.copy()
 
 

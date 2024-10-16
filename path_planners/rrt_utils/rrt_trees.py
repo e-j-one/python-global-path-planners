@@ -1,4 +1,4 @@
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict
 
 from scipy.spatial import KDTree
 import numpy as np
@@ -9,12 +9,12 @@ from path_planners.rrt_utils.rrt_nodes import RrtNode, RrtStarNode
 class RrtTree:
     def __init__(self) -> None:
         self._nodes: List[RrtNode] = []
-        self._pose_to_idx_map = {}
+        self._pose_to_idx_map: Dict[Tuple[float, float, float], int] = {}
         self._kd_pos_tree: KDTree = None
 
     def reset_tree(self) -> None:
         self._nodes: List[RrtNode] = []
-        self._pose_to_idx_map = {}
+        self._pose_to_idx_map: Dict[Tuple[float, float, float], int] = {}
 
         self._kd_pos_tree: KDTree = None
 
@@ -33,15 +33,15 @@ class RrtTree:
             raise ValueError("Root node already exists!")
         self.add_node(root_pose, None)
 
-    def get_pose_of_node(self, idx: int) -> Tuple[float, float, float]:
-        return self._nodes[idx].get_pose()
-
     def find_nearest_node(self, pos: Tuple[float, float]) -> RrtNode:
         distances, nearest_node_idx = self._kd_pos_tree.query(np.array([pos]))
         return self._nodes[nearest_node_idx[0]]
 
-    def check_if_pose_in_tree(self, pose: Tuple[float, float]) -> bool:
+    def check_if_pose_in_tree(self, pose: Tuple[float, float, float]) -> bool:
         return pose in self._pose_to_idx_map
+
+    def get_pose_of_node(self, idx: int) -> Tuple[float, float, float]:
+        return self._nodes[idx].get_pose()
 
     def get_idx_from_pos(self, pose: Tuple[float, float, float]) -> Optional[int]:
         if pose not in self._pose_to_idx_map:
@@ -91,13 +91,13 @@ class RrtStarTree(RrtTree):
         self.near_node_dist_threshold = near_node_dist_threshold
 
         self._nodes: List[RrtStarNode] = []
-        self._pose_to_idx_map = {}
+        self._pose_to_idx_map: Dict[Tuple[float, float, float], int] = {}
 
         self._kd_pos_tree: KDTree = None
 
     def reset_tree(self):
         self._nodes: List[RrtStarNode] = []
-        self._pose_to_idx_map = {}
+        self._pose_to_idx_map: Dict[Tuple[float, float, float], int] = {}
 
         self._kd_pos_tree: KDTree = None
 
@@ -122,43 +122,11 @@ class RrtStarTree(RrtTree):
             raise ValueError("Root node already exists")
         return self.add_node(root_pose, None, 0, 0)
 
-    def propagate_cost_to_children(self, node_idx: int):
-        for child_idx in self._nodes[node_idx].children:
-            updated_cost = (
-                self._nodes[node_idx].get_cost()
-                + self._nodes[child_idx].get_cost_from_parent()
-            )
-
-            self._nodes[child_idx].update_cost(updated_cost)
-            self.propagate_cost_to_children(child_idx)
-
     def find_near_nodes(self, new_node_pos: Tuple[float, float]) -> List[int]:
         near_nodes_idx = self._kd_pos_tree.query_ball_point(
             np.array([new_node_pos]), self.near_node_dist_threshold
         )
         return near_nodes_idx[0]
-
-    def get_cost_of_node_pos(self, pose: Tuple[float, float, float]) -> float:
-        if pose not in self._pose_to_idx_map:
-            return float("inf")
-        return self._nodes[self._pose_to_idx_map[pose]].get_cost()
-
-    def get_cost_of_node_idx(self, idx: int) -> float:
-        return self._nodes[idx].get_cost()
-
-    def update_parent_and_cost(
-        self,
-        node_idx: int,
-        new_parent_idx: int,
-        new_cost: float,
-        new_cost_from_parent: float,
-    ):
-        original_parent_idx = self._nodes[node_idx].get_parent()
-        self._nodes[original_parent_idx].remove_child(node_idx)
-        self._nodes[node_idx].update_parent_and_cost(
-            new_parent_idx, new_cost, new_cost_from_parent
-        )
-        self._nodes[new_parent_idx].add_child(node_idx)
 
     def find_optimal_parent_and_add_node_to_tree(
         self,
@@ -188,3 +156,47 @@ class RrtStarTree(RrtTree):
         return self.add_node(
             new_node_pose_selected, optimal_parent, min_cost, cost_to_parent
         )
+
+    def update_parent_and_propagate_cost(
+        self,
+        node_idx: int,
+        new_parent_idx: int,
+        new_cost: float,
+        new_cost_from_parent: float,
+    ):
+        self._update_parent_and_cost(
+            node_idx, new_parent_idx, new_cost, new_cost_from_parent
+        )
+        self._propagate_cost_to_children(node_idx)
+
+    def _propagate_cost_to_children(self, node_idx: int):
+        for child_idx in self._nodes[node_idx].get_children():
+            updated_cost = (
+                self._nodes[node_idx].get_cost()
+                + self._nodes[child_idx].get_cost_from_parent()
+            )
+
+            self._nodes[child_idx].update_cost(updated_cost)
+            self._propagate_cost_to_children(child_idx)
+
+    def _update_parent_and_cost(
+        self,
+        node_idx: int,
+        new_parent_idx: int,
+        new_cost: float,
+        new_cost_from_parent: float,
+    ):
+        original_parent_idx = self._nodes[node_idx].get_parent()
+        self._nodes[original_parent_idx].remove_child(node_idx)
+        self._nodes[node_idx].update_parent_and_cost(
+            new_parent_idx, new_cost, new_cost_from_parent
+        )
+        self._nodes[new_parent_idx].add_child(node_idx)
+
+    def get_cost_of_node_pos(self, pose: Tuple[float, float, float]) -> float:
+        if pose not in self._pose_to_idx_map:
+            return float("inf")
+        return self._nodes[self._pose_to_idx_map[pose]].get_cost()
+
+    def get_cost_of_node_idx(self, idx: int) -> float:
+        return self._nodes[idx].get_cost()

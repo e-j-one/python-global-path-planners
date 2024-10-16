@@ -338,6 +338,8 @@ def get_unicycle_path(
     1. Calculate the radius of the arc
     2. Calculate the angle difference per each step
     3. Generate the path with the angle difference until reaching the pos_f
+
+    Distance between two consecutive poses is d_s but the last pose is guaranteed to be pos_f
     """
 
     turning_radius = GeometryUtils.calculate_arc_path_radius(pose_i, pos_f)

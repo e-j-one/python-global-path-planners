@@ -218,24 +218,79 @@ class RrtStarSmoothUnicyclePlanner(RrtUnicyclePlanner):
         return GeometryUtils.get_path_length(path)
 
     def _rewire_tree(self, new_node_idx, near_nodes_idx):
-        # new_node_pose = self._tree.get_pose_of_node(new_node_idx)
-        # for near_node_idx in near_nodes_idx:
-        #     near_node_pose = self._tree.get_pose_of_node(near_node_idx)
+        new_node_pose = self._tree.get_pose_of_node(new_node_idx)
+        new_node_cost = self._tree.get_cost_of_node_idx(new_node_idx)
 
-        #     path_1, path_2, pose_stopover = (
-        #         KinematicUtils.get_pose_to_connect_poses_by_two_arcs(
-        #             new_node_pose, near_node_pose
-        #         )
-        #     )
+        for near_node_idx in near_nodes_idx:
+            near_node_pose = self._tree.get_pose_of_node(near_node_idx)
 
-        #     if self._check_collision(path_to_new_node):
-        #         continue
+            pose_and_path_length = KinematicUtils.get_pose_to_connect_poses_by_two_arcs(
+                new_node_pose, near_node_pose, self._min_turning_radius
+            )
+            if pose_and_path_length is None:
+                continue
+            pose_stopover, path_length_total = pose_and_path_length
 
-        #     new_node_cost = self._tree.get_cost_of_node_idx(new_node_idx)
-        #     cost_to_new_node = self._get_cost_of_path(path_to_new_node)
+            if new_node_cost + path_length_total >= self._tree.get_cost_of_node_idx(
+                near_node_idx
+            ):
+                continue
 
-        #     if new_node_cost + cost_to_new_node < self._tree.get_cost_of_node_idx(
-        #         near_node_idx
-        #     ):
-        #         self._tree.update_parent_of_node(near_node_idx, new_node_idx)
-        pass
+            path_from_new_node_to_stopover = KinematicUtils.get_unicycle_path(
+                new_node_pose, pose_stopover, d_s=self._occupancy_map_resolution
+            )
+
+            path_from_stopover_to_near_node = KinematicUtils.get_unicycle_path(
+                pose_stopover, near_node_pose, d_s=self._occupancy_map_resolution
+            )
+            if self._check_collision(
+                path_from_new_node_to_stopover
+            ) or self._check_collision(path_from_stopover_to_near_node):
+                continue
+
+            self._add_stopover_node_and_update_near_node_parent(
+                new_node_idx,
+                pose_stopover,
+                near_node_idx,
+                path_from_new_node_to_stopover,
+                path_from_stopover_to_near_node,
+            )
+
+    def _add_stopover_node_and_update_near_node_parent(
+        self,
+        new_node_idx: int,
+        pose_stopover: Tuple[float, float, float],
+        near_node_idx: int,
+        path_from_new_node_to_stopover: List[Tuple[float, float, float]],
+        path_from_stopover_to_near_node: List[Tuple[float, float, float]],
+    ) -> None:
+        """
+        Add stopover pose to the tree as child of new node
+        Update the parent of the near node to the stopover pose
+        """
+        new_node_cost = self._tree.get_cost_of_node_idx(new_node_idx)
+
+        cost_from_new_node_to_stopover_node = self._get_cost_of_path(
+            path_from_new_node_to_stopover
+        )
+        cost_from_stopover_node_to_near_node = self._get_cost_of_path(
+            path_from_stopover_to_near_node
+        )
+
+        cost_of_stopover_node = new_node_cost + cost_from_new_node_to_stopover_node
+        updated_cost_of_near_node = (
+            cost_of_stopover_node + cost_from_stopover_node_to_near_node
+        )
+
+        stopover_node_idx = self._tree.add_node(
+            pose_stopover,
+            new_node_idx,
+            new_node_cost + cost_from_new_node_to_stopover_node,
+            cost_from_new_node_to_stopover_node,
+        )
+        self._tree.update_parent_and_propagate_cost(
+            near_node_idx,
+            stopover_node_idx,
+            updated_cost_of_near_node,
+            cost_from_stopover_node_to_near_node,
+        )
