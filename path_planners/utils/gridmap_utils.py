@@ -5,6 +5,7 @@ import warnings
 import cv2
 import yaml
 import numpy as np
+from scipy.ndimage import distance_transform_edt
 
 
 # Load YAML configuration for ROS map
@@ -161,3 +162,33 @@ def check_collision_for_path(
         ):
             return True
     return False
+
+
+def get_padded_occupancy_map(occupancy_map, distance, resolution):
+    """
+    Pads the occupancy map by marking cells within a given distance from occupied cells as occupied.
+
+    Parameters:
+        occupancy_map (np.array): The original occupancy map with 0 as free, 100 as occupied, and -1 as unknown.
+        distance (float): The distance (in meters) to pad around occupied cells.
+        resolution (float): The resolution of the occupancy map (meters per cell).
+
+    Returns:
+        np.array: The padded occupancy map.
+    """
+    # Calculate the radius of padding in terms of cells
+    print("distance: ", distance, " resolution: ", resolution)
+    radius_cells = round(distance / resolution, 6)
+    print("radius_cells: ", radius_cells)
+    # Create a binary mask of occupied cells (100)
+    occupied_mask = occupancy_map == 100
+
+    # Compute the distance transform of the inverse of the occupied mask
+    distance_map = distance_transform_edt(~occupied_mask)
+    print("distance_map\n", distance_map)
+
+    # Create the new padded occupancy map
+    padded_occupancy_map = occupancy_map.copy()
+    padded_occupancy_map[distance_map <= radius_cells] = 100
+
+    return padded_occupancy_map

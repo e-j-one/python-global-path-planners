@@ -13,6 +13,7 @@ from path_planners.utils.gridmap_utils import (
     check_if_pos_is_free,
     check_path_segments_are_not_larger_than_threshold,
     check_collision_for_path,
+    get_padded_occupancy_map,
 )
 
 
@@ -334,3 +335,67 @@ def test_check_collision_for_path():
                 check_collision_for_path(occupancy_map, resolution, origin, target_path)
                 == True
             )
+
+
+def test_get_padded_occupancy_map():
+    # Arrange
+    resolution = 0.1
+    occupancy_map = np.array(
+        [
+            [0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 100, 0.0, 0.0, -1.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0],
+        ]
+    )
+
+    label_padded_occupancy_map_0d1 = np.array(
+        [
+            [0.0, 100, 0.0, 0.0, 0.0],
+            [100, 100, 100, 0.0, -1.0],
+            [0.0, 100, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0],
+        ]
+    )
+    label_padded_occupancy_map_0d2 = np.array(
+        [
+            [100, 100, 100, 0.0, 0.0],
+            [100, 100, 100, 100, -1.0],
+            [100, 100, 100, 0.0, 0.0],
+            [0.0, 100, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0],
+        ]
+    )
+    label_padded_occupancy_map_0d3 = np.array(
+        [
+            [100, 100, 100, 100, 0.0],
+            [100, 100, 100, 100, 100],
+            [100, 100, 100, 100, 0.0],
+            [100, 100, 100, 100, 0.0],
+            [0.0, 100, 0.0, 0.0, 0.0],
+        ]
+    )
+
+    # Act
+    answer_padded_occupancy_map_0d1 = get_padded_occupancy_map(
+        occupancy_map, 0.1, resolution
+    )
+    answer_padded_occupancy_map_0d2 = get_padded_occupancy_map(
+        occupancy_map, 0.2, resolution
+    )
+    answer_padded_occupancy_map_0d3 = get_padded_occupancy_map(
+        occupancy_map, 0.3, resolution
+    )
+
+    # Assert
+    assert np.array_equal(
+        answer_padded_occupancy_map_0d1, label_padded_occupancy_map_0d1
+    )
+    assert np.array_equal(
+        answer_padded_occupancy_map_0d2, label_padded_occupancy_map_0d2
+    )
+    assert np.array_equal(
+        answer_padded_occupancy_map_0d3, label_padded_occupancy_map_0d3
+    )
