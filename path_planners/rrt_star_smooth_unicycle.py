@@ -134,7 +134,8 @@ class RrtStarSmoothUnicyclePlanner(RrtUnicyclePlanner):
 
             # Check if the goal is reached
             if self._check_goal_reachable(new_node_pos, goal_pose):
-                print("Goal is reached !!! sample_iter: ", sample_iter)
+                if not path_found:
+                    print("Goal is reached !!! sample_iter: ", sample_iter)
                 path_found = True
                 if not self._tree.check_if_pose_in_tree(goal_pose):
                     new_node_cost = self._tree.get_cost_of_node_idx(new_node_idx)
