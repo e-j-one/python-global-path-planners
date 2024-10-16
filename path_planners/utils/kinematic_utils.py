@@ -327,6 +327,9 @@ def get_straingt_path(
         y = pose_i[1] + s * unit_i_f[1]
         path.append((x, y, pose_i[2]))
 
+    if path[-1][:2] != pos_f:
+        path.append((*pos_f, pose_i[2]))
+
     return path
 
 
@@ -367,6 +370,7 @@ def get_unicycle_path(
 
     path = [pose_i]
 
+    theta = theta_start
     for i in range(num_steps):
         theta = theta_start + (i + 1) * d_theta
 
@@ -377,6 +381,13 @@ def get_unicycle_path(
         )
         path.append(next_pose)
 
+    if not MathUtils.check_if_angle_diff_is_within_threshold(theta, theta_goal, 1e-12):
+        path.append(
+            (
+                *pos_f,
+                MathUtils.normalize_angle(theta_goal + radius_dir_sign * 0.5 * np.pi),
+            )
+        )
     # print("================================")
     # print(f"pose_i: {pose_i} pose_f: {pos_f}")
     # print("turning_radius", turning_radius)

@@ -24,3 +24,12 @@ def normalize_angle_positive(angle: float) -> float:
     normalize_angle_positive = angle % (2 * np.pi)
     # print("normalize_angle_positive", normalize_angle_positive)
     return normalize_angle_positive
+
+
+def check_if_angle_diff_is_within_threshold(
+    angle_i: float, angle_f: float, threshold: float
+) -> bool:
+    """
+    Check if the angle_i is near the angle_f within the threshold (abs(angle_i - angle_f) < threshold)
+    """
+    return abs(normalize_angle(angle_i - angle_f)) < threshold

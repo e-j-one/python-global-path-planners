@@ -335,9 +335,27 @@ def test_get_straingt_path():
         (4.0, 0.0, 0.0),
     ]
     assert get_straingt_path(pose_i, pos_f, d_s) == label_path
+
     pos_f = (4.1, 0.0)
+    label_path = [
+        (0.0, 0.0, 0.0),
+        (1.0, 0.0, 0.0),
+        (2.0, 0.0, 0.0),
+        (3.0, 0.0, 0.0),
+        (4.0, 0.0, 0.0),
+        (4.1, 0.0, 0.0),
+    ]
     assert get_straingt_path(pose_i, pos_f, d_s) == label_path
+
     pos_f = (4.99, 0.0)
+    label_path = [
+        (0.0, 0.0, 0.0),
+        (1.0, 0.0, 0.0),
+        (2.0, 0.0, 0.0),
+        (3.0, 0.0, 0.0),
+        (4.0, 0.0, 0.0),
+        (4.99, 0.0, 0.0),
+    ]
     assert get_straingt_path(pose_i, pos_f, d_s) == label_path
 
     pose_i = (0.0, 0.0, 0.5 * np.pi)
@@ -385,7 +403,16 @@ def test_get_unicycle_path():
     answer_path = np.array(get_unicycle_path(pose_i, pos_f, d_s))
     assert answer_path == pytest.approx(label_path)
 
+    # Test that last pos on path is guaranteed to be pos_f
     pos_f = (np.cos(0.1 * np.pi), 1.0 + np.sin(0.1 * np.pi))
+    label_path = np.array(
+        [
+            (0.0, 0.0, 0.0),
+            (0.5 * np.sqrt(2.0), 1.0 - 0.5 * np.sqrt(2.0), 0.25 * np.pi),
+            (1.0, 1.0, 0.5 * np.pi),
+            (np.cos(0.1 * np.pi), 1.0 + np.sin(0.1 * np.pi), 0.6 * np.pi),
+        ]
+    )
     answer_path = np.array(get_unicycle_path(pose_i, pos_f, d_s))
     assert answer_path == pytest.approx(label_path)
 
@@ -400,6 +427,7 @@ def test_get_unicycle_path():
             (-0.5 * np.sqrt(2.0), 1.0 + 0.5 * np.sqrt(2.0), -0.75 * np.pi),
             (-1.0, 1.0, -0.5 * np.pi),
             (-0.5 * np.sqrt(2.0), 1.0 - 0.5 * np.sqrt(2.0), -0.25 * np.pi),
+            (np.cos(1.4 * np.pi), 1.0 + np.sin(1.4 * np.pi), -0.1 * np.pi),
         ]
     )
     label_path_pi_to_minus_pi = np.where(label_path == np.pi, -np.pi, label_path)
@@ -461,9 +489,27 @@ def test_get_unicycle_path():
         (4.0, 0.0, 0.0),
     ]
     assert get_unicycle_path(pose_i, pos_f, d_s) == label_path
+
     pos_f = (4.1, 0.0)
+    label_path = [
+        (0.0, 0.0, 0.0),
+        (1.0, 0.0, 0.0),
+        (2.0, 0.0, 0.0),
+        (3.0, 0.0, 0.0),
+        (4.0, 0.0, 0.0),
+        (4.1, 0.0, 0.0),
+    ]
     assert get_unicycle_path(pose_i, pos_f, d_s) == label_path
+
     pos_f = (4.99, 0.0)
+    label_path = [
+        (0.0, 0.0, 0.0),
+        (1.0, 0.0, 0.0),
+        (2.0, 0.0, 0.0),
+        (3.0, 0.0, 0.0),
+        (4.0, 0.0, 0.0),
+        (4.99, 0.0, 0.0),
+    ]
     assert get_unicycle_path(pose_i, pos_f, d_s) == label_path
 
     pose_i = (0.0, 0.0, 0.5 * np.pi)
