@@ -193,7 +193,7 @@ class RrtStarSmoothUnicyclePlanner(RrtUnicyclePlanner):
             if self._check_collision(path_to_new_node):
                 continue
 
-            new_node_yaw = KinematicUtils.calculate_unicycle_final_yaw(
+            new_node_yaw = KinematicUtils.calculate_final_yaw_of_arc_path(
                 near_node_pose, new_node_pos
             )
 
@@ -218,4 +218,24 @@ class RrtStarSmoothUnicyclePlanner(RrtUnicyclePlanner):
         return GeometryUtils.get_path_length(path)
 
     def _rewire_tree(self, new_node_idx, near_nodes_idx):
+        # new_node_pose = self._tree.get_pose_of_node(new_node_idx)
+        # for near_node_idx in near_nodes_idx:
+        #     near_node_pose = self._tree.get_pose_of_node(near_node_idx)
+
+        #     path_1, path_2, pose_stopover = (
+        #         KinematicUtils.get_pose_to_connect_poses_by_two_arcs(
+        #             new_node_pose, near_node_pose
+        #         )
+        #     )
+
+        #     if self._check_collision(path_to_new_node):
+        #         continue
+
+        #     new_node_cost = self._tree.get_cost_of_node_idx(new_node_idx)
+        #     cost_to_new_node = self._get_cost_of_path(path_to_new_node)
+
+        #     if new_node_cost + cost_to_new_node < self._tree.get_cost_of_node_idx(
+        #         near_node_idx
+        #     ):
+        #         self._tree.update_parent_of_node(near_node_idx, new_node_idx)
         pass

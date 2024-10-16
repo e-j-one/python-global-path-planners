@@ -124,7 +124,7 @@ class RrtUnicyclePlanner(PathPlanner):
                 continue
             edge_paths.append(path_to_new_node)
 
-            new_node_yaw = KinematicUtils.calculate_unicycle_final_yaw(
+            new_node_yaw = KinematicUtils.calculate_final_yaw_of_arc_path(
                 nearest_node_pose, new_node_pos
             )
             # print("\tnew_node_yaw: ", new_node_yaw)

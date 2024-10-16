@@ -61,12 +61,12 @@ def check_unicycle_reachability(
     return False
 
 
-def get_circle_radius_candidates(
+def get_turning_radius_candidates_to_connect_pose_with_two_arcs(
     pose_i: Tuple[float, float, float],
     pose_f: Tuple[float, float, float],
 ) -> List[float]:
     """
-    Return radius candidates of two arcs that can connects pose_i and pose_f.
+    Return turning radius candidates of two arcs that can connects pose_i and pose_f.
     Positive for left turn first, negative for right turn first.
 
     pose_i = (x_i, y_i, yaw_i)
@@ -117,7 +117,7 @@ def get_circle_radius_candidates(
     return turning_radius_candidates
 
 
-def get_pose_connecting_arc_by_radius(
+def get_pose_connecting_arc_paths_by_radius(
     pose_i: Tuple[float, float, float],
     pose_f: Tuple[float, float, float],
     radius: float,
@@ -160,7 +160,7 @@ def get_pose_connecting_arc_by_radius(
     return (center_mid[0], center_mid[1], yaw)
 
 
-def get_pose_path_length_of_arc(
+def get_arc_path_length(
     pose_i: Tuple[float, float, float],
     pos_f: Tuple[float, float],
 ) -> float:
@@ -187,7 +187,7 @@ def get_pose_path_length_of_arc(
 
     turning_radius = 0.5 * dist_i_f / np.sin(delta_i_f)
 
-    pos_f_yaw = calculate_unicycle_final_yaw(pose_i, pos_f)
+    pos_f_yaw = calculate_final_yaw_of_arc_path(pose_i, pos_f)
 
     angle_diff = pos_f_yaw - pose_i[2]
     # Normalize the angle difference to [0, 2pi)
@@ -199,7 +199,7 @@ def get_pose_path_length_of_arc(
         return -turning_radius * angle_diff
 
 
-def get_two_arcs_connecting_poses(
+def get_pose_to_connect_poses_by_two_arcs(
     pose_i: Tuple[float, float, float],
     pose_f: Tuple[float, float, float],
     min_turning_radius: float,
@@ -216,37 +216,37 @@ def get_two_arcs_connecting_poses(
     """
 
     # 1. Get candidates turning radius of arcs
-    radius_candidates = get_circle_radius_candidates(pose_i, pose_f)
+    radius_candidates = get_turning_radius_candidates_to_connect_pose_with_two_arcs(
+        pose_i, pose_f
+    )
 
     # 2. Validate & choose the valid radius
     if len(radius_candidates) == 0:
         return None
 
     optimal_path_length = np.inf
-    optimal_pose = None
-    optimal_radius = None
+    optimal_stopover_pose = None
 
     for radius in radius_candidates:
         if abs(radius) < min_turning_radius:
             continue
 
         # Get the pose connecting two arcs
-        pose_stopover = get_pose_connecting_arc_by_radius(pose_i, pose_f, radius)
-        path_length_of_candidate = get_pose_path_length_of_arc(
+        pose_stopover = get_pose_connecting_arc_paths_by_radius(pose_i, pose_f, radius)
+        path_length_of_candidate = get_arc_path_length(
             pose_i, pose_stopover[:2]
-        ) + get_pose_path_length_of_arc(pose_stopover, pose_f[:2])
+        ) + get_arc_path_length(pose_stopover, pose_f[:2])
 
         if path_length_of_candidate < optimal_path_length:
             optimal_path_length = path_length_of_candidate
-            optimal_pose = pose_stopover
-            optimal_radius = radius
+            optimal_stopover_pose = pose_stopover
 
-    if optimal_pose is None:
+    if optimal_stopover_pose is None:
         return None
-    return (optimal_pose, optimal_path_length, optimal_radius)
+    return optimal_stopover_pose, optimal_path_length
 
 
-def calculate_unicycle_final_yaw(
+def calculate_final_yaw_of_arc_path(
     pose_i: Tuple[float, float, float],
     pos_f: Tuple[float, float],
 ) -> float:
@@ -261,7 +261,7 @@ def calculate_unicycle_final_yaw(
     return MathUtils.normalize_angle(pose_f_yaw)
 
 
-def calculate_unicycle_path_angular_velocity(
+def calculate_angular_velocity_to_reach_pos(
     pose_i: Tuple[float, float, float],
     pos_f: Tuple[float, float],
     linear_velocity: float,
@@ -296,9 +296,9 @@ def calculate_unicycle_w_yaw(
     - angular_velocity: angular velocity to reach pos_f from pose_i
     - yaw: yaw of the final position
     """
-    return calculate_unicycle_path_angular_velocity(
+    return calculate_angular_velocity_to_reach_pos(
         pose_i, pos_f, linear_velocity
-    ), calculate_unicycle_final_yaw(pose_i, pos_f)
+    ), calculate_final_yaw_of_arc_path(pose_i, pos_f)
 
 
 def get_straingt_path(

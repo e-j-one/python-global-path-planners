@@ -3,12 +3,12 @@ import pytest
 
 from path_planners.utils.kinematic_utils import (
     check_unicycle_reachability,
-    get_circle_radius_candidates,
-    get_pose_connecting_arc_by_radius,
-    get_pose_path_length_of_arc,
-    get_two_arcs_connecting_poses,
-    calculate_unicycle_final_yaw,
-    calculate_unicycle_path_angular_velocity,
+    get_turning_radius_candidates_to_connect_pose_with_two_arcs,
+    get_pose_connecting_arc_paths_by_radius,
+    get_arc_path_length,
+    get_pose_to_connect_poses_by_two_arcs,
+    calculate_final_yaw_of_arc_path,
+    calculate_angular_velocity_to_reach_pos,
     calculate_unicycle_w_yaw,
     get_straingt_path,
     get_unicycle_path,
@@ -126,31 +126,37 @@ def test_check_unicycle_reachability():
     assert check_unicycle_reachability(pose_i, (1.0, 1.0), 1.0, 1.0) == False
 
 
-def test_get_circle_radius_candidates():
+def test_get_turning_radius_candidates_to_connect_pose_with_two_arcs():
     # Test left turn -> right turn with r = 1.0
     for theta in np.linspace(-np.pi, np.pi, 100):
-        assert pytest.approx(1.0) in get_circle_radius_candidates(
+        assert pytest.approx(
+            1.0
+        ) in get_turning_radius_candidates_to_connect_pose_with_two_arcs(
             (0.0, 0.0, 0.0),
             (2.0 + np.cos(theta), 1.0 + np.sin(theta), theta - 0.5 * np.pi),
         )
 
     # Test right turn -> left turn with r = -1.0
     for theta in np.linspace(-np.pi, np.pi, 100):
-        assert pytest.approx(-1.0) in get_circle_radius_candidates(
+        assert pytest.approx(
+            -1.0
+        ) in get_turning_radius_candidates_to_connect_pose_with_two_arcs(
             (0.0, 0.0, 0.0),
             (2.0 + np.cos(theta), -1.0 + np.sin(theta), theta + 0.5 * np.pi),
         )
 
     # Test pose that can be reached by single arc
-    assert pytest.approx(1.0) in get_circle_radius_candidates(
+    assert pytest.approx(
+        1.0
+    ) in get_turning_radius_candidates_to_connect_pose_with_two_arcs(
         (0.0, 0.0, 0.0), (1.0, 1.0, 0.5 * np.pi)
     )
 
 
-def test_get_pose_connecting_arc_by_radius():
+def test_get_pose_connecting_arc_paths_by_radius():
     # Test left turn -> right turn with r = 1.0
     for theta in np.linspace(-np.pi, np.pi, 100):
-        assert get_pose_connecting_arc_by_radius(
+        assert get_pose_connecting_arc_paths_by_radius(
             (0.0, 0.0, 0.0),
             (2.0 + np.cos(theta), 1.0 + np.sin(theta), theta - 0.5 * np.pi),
             1.0,
@@ -158,132 +164,127 @@ def test_get_pose_connecting_arc_by_radius():
 
     # Test right turn -> left turn with r = -1.0
     for theta in np.linspace(-np.pi, np.pi, 100):
-        assert get_pose_connecting_arc_by_radius(
+        assert get_pose_connecting_arc_paths_by_radius(
             (0.0, 0.0, 0.0),
             (2.0 + np.cos(theta), -1.0 + np.sin(theta), theta + 0.5 * np.pi),
             -1.0,
         ) == pytest.approx((1.0, -1.0, -0.5 * np.pi))
 
 
-def test_get_pose_path_length_of_arc():
+def test_get_arc_path_length():
     # Test along left turn circle with r = 1.0
     pose_i = (0.0, 0.0, 0.0)
-    assert get_pose_path_length_of_arc(pose_i, (0.0, 0.0)) == pytest.approx(0.0)
-    assert get_pose_path_length_of_arc(pose_i, (1.0, 1.0)) == pytest.approx(0.5 * np.pi)
-    assert get_pose_path_length_of_arc(pose_i, (0.0, 2.0)) == pytest.approx(np.pi)
-    assert get_pose_path_length_of_arc(pose_i, (-1.0, 1.0)) == pytest.approx(
-        1.5 * np.pi
-    )
+    assert get_arc_path_length(pose_i, (0.0, 0.0)) == pytest.approx(0.0)
+    assert get_arc_path_length(pose_i, (1.0, 1.0)) == pytest.approx(0.5 * np.pi)
+    assert get_arc_path_length(pose_i, (0.0, 2.0)) == pytest.approx(np.pi)
+    assert get_arc_path_length(pose_i, (-1.0, 1.0)) == pytest.approx(1.5 * np.pi)
     # Test along right turn circle with r = 1.0
     pose_i = (0.0, 0.0, 0.0)
-    assert get_pose_path_length_of_arc(pose_i, (1.0, -1.0)) == pytest.approx(
-        0.5 * np.pi
-    )
-    assert get_pose_path_length_of_arc(pose_i, (0.0, -2.0)) == pytest.approx(np.pi)
-    assert get_pose_path_length_of_arc(pose_i, (-1.0, -1.0)) == pytest.approx(
-        1.5 * np.pi
-    )
+    assert get_arc_path_length(pose_i, (1.0, -1.0)) == pytest.approx(0.5 * np.pi)
+    assert get_arc_path_length(pose_i, (0.0, -2.0)) == pytest.approx(np.pi)
+    assert get_arc_path_length(pose_i, (-1.0, -1.0)) == pytest.approx(1.5 * np.pi)
 
     # Test along axis of heading direction
     pose_i = (0.0, 0.0, 0.0)
-    assert get_pose_path_length_of_arc(pose_i, (1.0, 0.0)) == pytest.approx(1.0)
-    assert get_pose_path_length_of_arc(pose_i, (2.0, 0.0)) == pytest.approx(2.0)
-    assert get_pose_path_length_of_arc(pose_i, (4.0, 0.0)) == pytest.approx(4.0)
-    assert get_pose_path_length_of_arc(pose_i, (-1.0, 0.0)) == np.inf
-    assert get_pose_path_length_of_arc(pose_i, (-2.0, 0.0)) == np.inf
-    assert get_pose_path_length_of_arc(pose_i, (-4.0, 0.0)) == np.inf
+    assert get_arc_path_length(pose_i, (1.0, 0.0)) == pytest.approx(1.0)
+    assert get_arc_path_length(pose_i, (2.0, 0.0)) == pytest.approx(2.0)
+    assert get_arc_path_length(pose_i, (4.0, 0.0)) == pytest.approx(4.0)
+    assert get_arc_path_length(pose_i, (-1.0, 0.0)) == np.inf
+    assert get_arc_path_length(pose_i, (-2.0, 0.0)) == np.inf
+    assert get_arc_path_length(pose_i, (-4.0, 0.0)) == np.inf
 
 
-def test_get_two_arcs_connecting_poses():
+def test_get_pose_to_connect_poses_by_two_arcs():
     pose_i = (0.0, 0.0, 0.0)
     min_r = 1.0
-    assert get_two_arcs_connecting_poses(pose_i, (0.0, 0.0, 0.0), min_r) == None
-    # assert get_two_arcs_connecting_poses(pose_i, (0.0, 0.0, 0.0), min_r) == pytest.approx((0.0, 0.0, 0.0), 0.0, np.inf)
-    assert get_two_arcs_connecting_poses(pose_i, (0.0, 1.0, 0.0), min_r) == None
-    assert get_two_arcs_connecting_poses(pose_i, (0.0, -1.0, 0.0), min_r) == None
+    assert get_pose_to_connect_poses_by_two_arcs(pose_i, (0.0, 0.0, 0.0), min_r) == None
+    # assert get_pose_to_connect_poses_by_two_arcs(pose_i, (0.0, 0.0, 0.0), min_r) == pytest.approx((0.0, 0.0, 0.0), 0.0, np.inf)
+    assert get_pose_to_connect_poses_by_two_arcs(pose_i, (0.0, 1.0, 0.0), min_r) == None
+    assert (
+        get_pose_to_connect_poses_by_two_arcs(pose_i, (0.0, -1.0, 0.0), min_r) == None
+    )
 
-    label_pose_stopover, label_path_length, label_radius = (
-        get_two_arcs_connecting_poses(pose_i, (2.0, 2.0, 0.0), min_r)
+    label_pose_stopover, label_path_length = get_pose_to_connect_poses_by_two_arcs(
+        pose_i, (2.0, 2.0, 0.0), min_r
     )
     assert label_pose_stopover == pytest.approx((1.0, 1.0, 0.5 * np.pi))
     assert label_path_length == pytest.approx(np.pi)
-    assert label_radius == pytest.approx(1.0)
 
 
-def test_calculate_unicycle_final_yaw():
+def test_calculate_final_yaw_of_arc_path():
     _NON_ZERO_OFFSET = 0.01
     # Test same position
     for theta in np.linspace(-np.pi + _NON_ZERO_OFFSET, np.pi, 100):
         pose_i = (0.0, 0.0, theta)
-        assert calculate_unicycle_final_yaw(pose_i, (0.0, 0.0)) == theta
+        assert calculate_final_yaw_of_arc_path(pose_i, (0.0, 0.0)) == theta
 
     # Test along the axis of heading direction
     pose_i = (0.0, 0.0, 0.0)
-    assert calculate_unicycle_final_yaw(pose_i, (0.5, 0.0)) == 0.0
-    assert calculate_unicycle_final_yaw(pose_i, (1.0, 0.0)) == 0.0
-    assert calculate_unicycle_final_yaw(pose_i, (2.0, 0.0)) == 0.0
+    assert calculate_final_yaw_of_arc_path(pose_i, (0.5, 0.0)) == 0.0
+    assert calculate_final_yaw_of_arc_path(pose_i, (1.0, 0.0)) == 0.0
+    assert calculate_final_yaw_of_arc_path(pose_i, (2.0, 0.0)) == 0.0
 
-    assert calculate_unicycle_final_yaw(pose_i, (-0.5, 0.0)) == 0.0
-    assert calculate_unicycle_final_yaw(pose_i, (-1.0, 0.0)) == 0.0
-    assert calculate_unicycle_final_yaw(pose_i, (-2.0, 0.0)) == 0.0
+    assert calculate_final_yaw_of_arc_path(pose_i, (-0.5, 0.0)) == 0.0
+    assert calculate_final_yaw_of_arc_path(pose_i, (-1.0, 0.0)) == 0.0
+    assert calculate_final_yaw_of_arc_path(pose_i, (-2.0, 0.0)) == 0.0
 
     pose_i = (0.0, 0.0, np.pi)
-    assert calculate_unicycle_final_yaw(pose_i, (-0.0, 0.0)) == np.pi
-    assert calculate_unicycle_final_yaw(pose_i, (-0.5, 0.0)) == np.pi
-    assert calculate_unicycle_final_yaw(pose_i, (-1.0, 0.0)) == np.pi
-    assert calculate_unicycle_final_yaw(pose_i, (-2.0, 0.0)) == np.pi
+    assert calculate_final_yaw_of_arc_path(pose_i, (-0.0, 0.0)) == np.pi
+    assert calculate_final_yaw_of_arc_path(pose_i, (-0.5, 0.0)) == np.pi
+    assert calculate_final_yaw_of_arc_path(pose_i, (-1.0, 0.0)) == np.pi
+    assert calculate_final_yaw_of_arc_path(pose_i, (-2.0, 0.0)) == np.pi
 
     # Test along the axis perpendicular to the heading direction
     pose_i = (0.0, 0.0, 0.0)
-    assert calculate_unicycle_final_yaw(pose_i, (0.0, 0.5)) == np.pi
-    assert calculate_unicycle_final_yaw(pose_i, (0.0, 1.0)) == np.pi
-    assert calculate_unicycle_final_yaw(pose_i, (0.0, 2.0)) == np.pi
-    assert calculate_unicycle_final_yaw(pose_i, (0.0, -0.5)) == np.pi
-    assert calculate_unicycle_final_yaw(pose_i, (0.0, -1.0)) == np.pi
-    assert calculate_unicycle_final_yaw(pose_i, (0.0, -2.0)) == np.pi
+    assert calculate_final_yaw_of_arc_path(pose_i, (0.0, 0.5)) == np.pi
+    assert calculate_final_yaw_of_arc_path(pose_i, (0.0, 1.0)) == np.pi
+    assert calculate_final_yaw_of_arc_path(pose_i, (0.0, 2.0)) == np.pi
+    assert calculate_final_yaw_of_arc_path(pose_i, (0.0, -0.5)) == np.pi
+    assert calculate_final_yaw_of_arc_path(pose_i, (0.0, -1.0)) == np.pi
+    assert calculate_final_yaw_of_arc_path(pose_i, (0.0, -2.0)) == np.pi
 
     pose_i = (0.0, 0.0, 0.5 * np.pi)
-    assert calculate_unicycle_final_yaw(pose_i, (0.5, 0.0)) == -0.5 * np.pi
-    assert calculate_unicycle_final_yaw(pose_i, (1.0, 0.0)) == -0.5 * np.pi
-    assert calculate_unicycle_final_yaw(pose_i, (2.0, 0.0)) == -0.5 * np.pi
-    assert calculate_unicycle_final_yaw(pose_i, (-0.5, 0.0)) == -0.5 * np.pi
-    assert calculate_unicycle_final_yaw(pose_i, (-1.0, 0.0)) == -0.5 * np.pi
-    assert calculate_unicycle_final_yaw(pose_i, (-2.0, 0.0)) == -0.5 * np.pi
+    assert calculate_final_yaw_of_arc_path(pose_i, (0.5, 0.0)) == -0.5 * np.pi
+    assert calculate_final_yaw_of_arc_path(pose_i, (1.0, 0.0)) == -0.5 * np.pi
+    assert calculate_final_yaw_of_arc_path(pose_i, (2.0, 0.0)) == -0.5 * np.pi
+    assert calculate_final_yaw_of_arc_path(pose_i, (-0.5, 0.0)) == -0.5 * np.pi
+    assert calculate_final_yaw_of_arc_path(pose_i, (-1.0, 0.0)) == -0.5 * np.pi
+    assert calculate_final_yaw_of_arc_path(pose_i, (-2.0, 0.0)) == -0.5 * np.pi
 
 
-def test_calculate_unicycle_path_angular_velocity():
+def test_calculate_angular_velocity_to_reach_pos():
     _NON_ZERO_OFFSET = 0.01
     # Test same position
     for theta in np.linspace(-np.pi + _NON_ZERO_OFFSET, np.pi, 100):
         pose_i = (0.0, 0.0, theta)
-        assert calculate_unicycle_path_angular_velocity(pose_i, (0.0, 0.0), 1.0) == 0.0
+        assert calculate_angular_velocity_to_reach_pos(pose_i, (0.0, 0.0), 1.0) == 0.0
 
     # Test along the axis of heading direction
     pose_i = (0.0, 0.0, 0.0)
-    assert calculate_unicycle_path_angular_velocity(pose_i, (0.5, 0.0), 1.0) == 0.0
-    assert calculate_unicycle_path_angular_velocity(pose_i, (1.0, 0.0), 1.0) == 0.0
-    assert calculate_unicycle_path_angular_velocity(pose_i, (2.0, 0.0), 1.0) == 0.0
+    assert calculate_angular_velocity_to_reach_pos(pose_i, (0.5, 0.0), 1.0) == 0.0
+    assert calculate_angular_velocity_to_reach_pos(pose_i, (1.0, 0.0), 1.0) == 0.0
+    assert calculate_angular_velocity_to_reach_pos(pose_i, (2.0, 0.0), 1.0) == 0.0
 
-    assert calculate_unicycle_path_angular_velocity(pose_i, (-0.5, 0.0), 1.0) == 0.0
-    assert calculate_unicycle_path_angular_velocity(pose_i, (-1.0, 0.0), 1.0) == 0.0
-    assert calculate_unicycle_path_angular_velocity(pose_i, (-2.0, 0.0), 1.0) == 0.0
+    assert calculate_angular_velocity_to_reach_pos(pose_i, (-0.5, 0.0), 1.0) == 0.0
+    assert calculate_angular_velocity_to_reach_pos(pose_i, (-1.0, 0.0), 1.0) == 0.0
+    assert calculate_angular_velocity_to_reach_pos(pose_i, (-2.0, 0.0), 1.0) == 0.0
 
     pose_i = (0.0, 0.0, 0.25 * np.pi)
-    assert calculate_unicycle_path_angular_velocity(pose_i, (0.5, 0.5), 1.0) == 0.0
-    assert calculate_unicycle_path_angular_velocity(pose_i, (1.0, 1.0), 1.0) == 0.0
-    assert calculate_unicycle_path_angular_velocity(pose_i, (2.0, 2.0), 1.0) == 0.0
+    assert calculate_angular_velocity_to_reach_pos(pose_i, (0.5, 0.5), 1.0) == 0.0
+    assert calculate_angular_velocity_to_reach_pos(pose_i, (1.0, 1.0), 1.0) == 0.0
+    assert calculate_angular_velocity_to_reach_pos(pose_i, (2.0, 2.0), 1.0) == 0.0
 
     # Test along the axis perpendicular to the heading direction (w=v/r)
     pose_i = (0.0, 0.0, 0.0)
-    assert calculate_unicycle_path_angular_velocity(pose_i, (0.0, 0.5), 1.0) == 4.0
-    assert calculate_unicycle_path_angular_velocity(pose_i, (0.0, 1.0), 1.0) == 2.0
-    assert calculate_unicycle_path_angular_velocity(pose_i, (0.0, 2.0), 1.0) == 1.0
-    assert calculate_unicycle_path_angular_velocity(pose_i, (0.0, 4.0), 1.0) == 0.5
+    assert calculate_angular_velocity_to_reach_pos(pose_i, (0.0, 0.5), 1.0) == 4.0
+    assert calculate_angular_velocity_to_reach_pos(pose_i, (0.0, 1.0), 1.0) == 2.0
+    assert calculate_angular_velocity_to_reach_pos(pose_i, (0.0, 2.0), 1.0) == 1.0
+    assert calculate_angular_velocity_to_reach_pos(pose_i, (0.0, 4.0), 1.0) == 0.5
 
-    assert calculate_unicycle_path_angular_velocity(pose_i, (0.0, -0.5), 1.0) == -4.0
-    assert calculate_unicycle_path_angular_velocity(pose_i, (0.0, -1.0), 1.0) == -2.0
-    assert calculate_unicycle_path_angular_velocity(pose_i, (0.0, -2.0), 1.0) == -1.0
-    assert calculate_unicycle_path_angular_velocity(pose_i, (0.0, -4.0), 1.0) == -0.5
+    assert calculate_angular_velocity_to_reach_pos(pose_i, (0.0, -0.5), 1.0) == -4.0
+    assert calculate_angular_velocity_to_reach_pos(pose_i, (0.0, -1.0), 1.0) == -2.0
+    assert calculate_angular_velocity_to_reach_pos(pose_i, (0.0, -2.0), 1.0) == -1.0
+    assert calculate_angular_velocity_to_reach_pos(pose_i, (0.0, -4.0), 1.0) == -0.5
 
     # Test along the circle with radius 1
     pose_i = (0.0, 0.0, 0.5 * np.pi)
@@ -300,18 +301,18 @@ def test_calculate_unicycle_path_angular_velocity():
             center_of_turning_left[1] + turning_radius * np.sin(np.pi - theta),
         )
         # Test positive linear velocity
-        assert calculate_unicycle_path_angular_velocity(
+        assert calculate_angular_velocity_to_reach_pos(
             pose_i, pos_f_left, 1.0
         ) == pytest.approx(1.0)
-        assert calculate_unicycle_path_angular_velocity(
+        assert calculate_angular_velocity_to_reach_pos(
             pose_i, pos_f_right, 1.0
         ) == pytest.approx(-1.0)
 
         # Test negative linear velocity
-        assert calculate_unicycle_path_angular_velocity(
+        assert calculate_angular_velocity_to_reach_pos(
             pose_i, pos_f_left, -1.0
         ) == pytest.approx(-1.0)
-        assert calculate_unicycle_path_angular_velocity(
+        assert calculate_angular_velocity_to_reach_pos(
             pose_i, pos_f_right, -1.0
         ) == pytest.approx(1.0)
 
