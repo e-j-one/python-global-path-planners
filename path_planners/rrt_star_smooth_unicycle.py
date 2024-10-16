@@ -1,4 +1,5 @@
 from typing import Tuple, Optional, List
+import time
 
 import numpy as np
 
@@ -81,6 +82,7 @@ class RrtStarSmoothUnicyclePlanner(RrtUnicyclePlanner):
                 - Get path and pose_stopover from the near node to the new node which connects the nodes with two smooth arcs.
                 - If no collision and the cost is smaller than the previous cost, update the parent node.
         """
+        path_planning_start_time = time.time()
         # Initialize the tree with the start node
         self._tree.reset_tree()
         self._tree.add_root(start_pose)
@@ -140,10 +142,18 @@ class RrtStarSmoothUnicyclePlanner(RrtUnicyclePlanner):
                     )
                 # break
 
+        path_planning_end_time = time.time()
+        print(
+            f"Path planning time: {path_planning_end_time - path_planning_start_time:.2f} sec"
+        )
         if path_found:
+            print("Goal is reached !!! sample_iter: ", sample_iter)
             self._plot_tree(start_pose, goal_pose)
-            print("Goal is reached !!!")
             self._path = self._tree.get_path_from_tree(goal_pose)
+            interpolated_unicycle_path = KinematicUtils.interpolate_path_using_arc(
+                self._path, self._occupancy_map_resolution
+            )
+            self._path = interpolated_unicycle_path
             return self._path, sample_iter
         else:
             print("Max iteration reached !!!")

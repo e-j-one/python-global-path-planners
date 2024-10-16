@@ -149,12 +149,9 @@ class RrtUnicyclePlanner(PathPlanner):
                     self._tree.add_node(goal_pose, new_node_idx)
                 break
 
-        if self._render_tree_during_planning:
-            print("Path planning over. sample_iter: ", sample_iter)
-            self._plot_tree_with_edge_paths(start_pose, goal_pose, edge_paths)
-
         if path_found:
-            print("Goal is reached !!!")
+            print("Goal is reached !!! sample_iter", sample_iter)
+            self._plot_tree_with_edge_paths(start_pose, goal_pose, edge_paths)
             self._path = self._tree.get_path_from_tree(goal_pose)
             interpolated_unicycle_path = KinematicUtils.interpolate_path_using_arc(
                 self._path, d_s=self._occupancy_map_resolution
