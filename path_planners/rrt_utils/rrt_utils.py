@@ -45,18 +45,6 @@ def plot_tree(
     # Set up the figure
     plt.figure()
 
-    # plt.imshow(
-    #     occupancy_map,
-    #     cmap="Greys",
-    #     origin="lower",
-    #     extent=[
-    #         occupancy_map_origin[0],
-    #         occupancy_map_origin[0] + occupancy_map.shape[1] * occupancy_map_resolution,
-    #         occupancy_map_origin[1],
-    #         occupancy_map_origin[1] + occupancy_map.shape[0] * occupancy_map_resolution,
-    #     ],
-    # )
-
     add_occupancy_grid_to_plot(
         occupancy_map, occupancy_map_resolution, occupancy_map_origin
     )
@@ -80,7 +68,7 @@ def plot_tree(
     plt.show()
 
 
-def _plot_tree_with_edge_paths(
+def plot_tree_with_edge_paths(
     nodes: List[RrtNode],
     occupancy_map: np.ndarray,
     occupancy_map_resolution: float,

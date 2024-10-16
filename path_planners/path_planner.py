@@ -3,6 +3,7 @@ from typing import List, Tuple, Optional
 import numpy as np
 
 import path_planners.utils.geometry_utils as GeometryUtils
+import path_planners.utils.gridmap_utils as GridmapUtils
 import path_planners.utils.plot_utils as PlotUtils
 
 
@@ -98,15 +99,12 @@ class PathPlanner:
         """
         Return True if there is a collision between the near node and the new node. Otherwise, return False.
         """
-        for pose_on_path in path:
-            pos_on_path = pose_on_path[:2]
-            if pos_on_path[0] <= self._x_min or pos_on_path[0] >= self._x_max:
-                return True
-            if pos_on_path[1] <= self._y_min or pos_on_path[1] >= self._y_max:
-                return True
-            # if not self._check_if_pos_is_free(x, y):
-            #     return True
-        return False
+        return GridmapUtils.check_collision_for_path(
+            self._occupancy_map,
+            self._occupancy_map_resolution,
+            self._occupancy_map_origin,
+            path,
+        )
 
     def _check_goal_reached(
         self,

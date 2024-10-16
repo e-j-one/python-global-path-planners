@@ -28,6 +28,7 @@ class RrtUnicyclePlanner(PathPlanner):
         max_drive_dist: float = 0.5,
         linear_velocity: float = 1.0,
         max_angular_velocity: float = 1.0,
+        render_tree_during_planning: bool = False,
     ):
         super().__init__(goal_reach_dist_threshold, goal_reach_angle_threshold)
         self._goal_sample_rate = goal_sample_rate
@@ -35,6 +36,7 @@ class RrtUnicyclePlanner(PathPlanner):
         self._max_drive_dist = max_drive_dist
         self._linear_velocity = linear_velocity
         self._max_angular_velocity = max_angular_velocity
+        self._render_tree_during_planning = render_tree_during_planning
 
         self._tree = RrtTree()
 
@@ -76,7 +78,7 @@ class RrtUnicyclePlanner(PathPlanner):
         edge_paths = []
 
         for sample_iter in range(self._max_iter):
-            if sample_iter % 1000 == 0:
+            if self._render_tree_during_planning and sample_iter % 1000 == 0:
                 print("sample_iter: ", sample_iter)
                 self._plot_tree_with_edge_paths(start_pose, goal_pose, edge_paths)
 
@@ -92,10 +94,11 @@ class RrtUnicyclePlanner(PathPlanner):
             new_node_pos = RrtUtils.drive_pos(
                 nearest_node_pos, random_pos, self._max_drive_dist
             )
-            print(f"new_node_pos: {new_node_pos[0]:.2f}, {new_node_pos[1]:.2f}")
-            print(
-                f"\tnearest_node_pose: {nearest_node_pose[0]:.2f}, {nearest_node_pose[1]:.2f}, {nearest_node_pose[2]:.2f}"
-            )
+            # print(f"random_pos: {random_pos[0]:.2f}, {random_pos[1]:.2f}")
+            # print(f"\tnew_node_pos: {new_node_pos[0]:.2f}, {new_node_pos[1]:.2f}")
+            # print(
+            #     f"\tnearest_node_pose: {nearest_node_pose[0]:.2f}, {nearest_node_pose[1]:.2f}, {nearest_node_pose[2]:.2f}"
+            # )
             # 4. Check collision and reachability
             # - Get arc path from the nearest node to the new node
             if not KinematicUtils.check_unicycle_reachability(
@@ -104,7 +107,7 @@ class RrtUnicyclePlanner(PathPlanner):
                 self._linear_velocity,
                 self._max_angular_velocity,
             ):
-                print("\tUnreachable")
+                # print("\tUnreachable")
                 continue
 
             path_to_new_node = KinematicUtils.get_unicycle_path(
@@ -112,18 +115,19 @@ class RrtUnicyclePlanner(PathPlanner):
                 new_node_pos,
                 d_s=self._occupancy_map_resolution,  # = collision checkresolution
             )
-            print("\t----------------")
-            DebugUtils.print_path(path=path_to_new_node)
-            print("\t----------------")
+            # print("\t----------------")
+            # DebugUtils.print_path(path=path_to_new_node)
+            # print("\t----------------")
 
             if self._check_collision(path_to_new_node):
+                # print("\tcollision")
                 continue
             edge_paths.append(path_to_new_node)
 
             new_node_yaw = KinematicUtils.calculate_unicycle_final_yaw(
                 nearest_node_pose, new_node_pos
             )
-            print("\tnew_node_yaw: ", new_node_yaw)
+            # print("\tnew_node_yaw: ", new_node_yaw)
 
             new_node_idx = self._tree.add_node(
                 (new_node_pos[0], new_node_pos[1], new_node_yaw),
@@ -137,12 +141,18 @@ class RrtUnicyclePlanner(PathPlanner):
                     self._tree.add_node(goal_pose, new_node_idx)
                 break
 
-        self._plot_tree_with_edge_paths(start_pose, goal_pose, edge_paths)
+        if self._render_tree_during_planning:
+            print("Path planning over. sample_iter: ", sample_iter)
+            self._plot_tree_with_edge_paths(start_pose, goal_pose, edge_paths)
 
         if path_found:
             print("Goal is reached !!!")
-            self.path = self._tree.get_path_from_tree(goal_pose)
-            return self.path, sample_iter
+            self._path = self._tree.get_path_from_tree(goal_pose)
+            interpolated_unicycle_path = KinematicUtils.interpolate_path_using_arc(
+                self._path, d_s=self._occupancy_map_resolution
+            )
+            self._path = interpolated_unicycle_path
+            return self._path, sample_iter
         else:
             print("Max iteration reached !!!")
             return None, sample_iter
@@ -168,7 +178,7 @@ class RrtUnicyclePlanner(PathPlanner):
         else:
             return self._sample_random_pos()
 
-    def _check_collision(self, path):
+    def _check_collision(self, path: List[Tuple[float, float, float]]):
         return super()._check_collision(path)
 
     def _check_goal_reached(
@@ -185,24 +195,20 @@ class RrtUnicyclePlanner(PathPlanner):
         goal_pose=Tuple[float, float, float],
     ):
         nodes = self._tree.get_nodes()
-        RrtUtils.plot_tree(
-            nodes,
-            self._occupancy_map,
-            self._occupancy_map_resolution,
-            self._occupancy_map_origin,
-            start_pose,
-            goal_pose,
-        )
-        print("plot tree")
 
-    def _plot_tree_with_edge_paths(
-        self,
-        start_pose=Tuple[float, float, float],
-        goal_pose=Tuple[float, float, float],
-        edge_paths: List[List[Tuple[float, float, float]]] = [],
-    ):
-        nodes = self._tree.get_nodes()
-        RrtUtils._plot_tree_with_edge_paths(
+        edge_paths = []
+        for node in nodes:
+            parent_idx = node.get_parent()
+            if parent_idx is not None:
+                parent_node = nodes[parent_idx]
+                unicycle_edge_path = KinematicUtils.get_unicycle_path(
+                    parent_node.get_pose(),
+                    node.get_pos(),
+                    d_s=self._occupancy_map_resolution,
+                )
+                edge_paths.append(unicycle_edge_path)
+
+        RrtUtils.plot_tree_with_edge_paths(
             nodes,
             self._occupancy_map,
             self._occupancy_map_resolution,
@@ -211,4 +217,20 @@ class RrtUnicyclePlanner(PathPlanner):
             goal_pose,
             edge_paths,
         )
-        print("plot tree with paths")
+
+    def _plot_tree_with_edge_paths(
+        self,
+        start_pose=Tuple[float, float, float],
+        goal_pose=Tuple[float, float, float],
+        edge_paths: List[List[Tuple[float, float, float]]] = [],
+    ):
+        nodes = self._tree.get_nodes()
+        RrtUtils.plot_tree_with_edge_paths(
+            nodes,
+            self._occupancy_map,
+            self._occupancy_map_resolution,
+            self._occupancy_map_origin,
+            start_pose,
+            goal_pose,
+            edge_paths,
+        )

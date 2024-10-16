@@ -1,4 +1,5 @@
 from typing import Tuple
+import warnings
 
 import numpy as np
 
@@ -48,6 +49,20 @@ def calculate_arc_path_radius(
     if abs(np.sin(delta_i_f)) < 1e-12:
         return np.inf
     return 0.5 * dist_i_f / np.sin(delta_i_f)
+
+
+def get_path_length(path: Tuple[float, float, float]) -> float:
+    """
+    Calculate the length of the path
+    """
+    if len(path) == 0:
+        warnings.warn("Path is empty.")
+        return 0.0
+
+    length = 0.0
+    for i in range(len(path) - 1):
+        length += np.linalg.norm(np.array(path[i][:2]) - np.array(path[i + 1][:2]))
+    return length
 
 
 def check_if_dist_is_below_threshold(

@@ -2,6 +2,7 @@ from typing import Tuple, Optional, List
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 
 
 def add_occupancy_grid_to_plot(
@@ -9,7 +10,8 @@ def add_occupancy_grid_to_plot(
     occupancy_map_resolution: float,
     occupancy_map_origin: Tuple[float, float, float],
 ):
-    cmap = plt.cm.gray
+    # Plot the occupancy map
+    cmap = plt.cm.binary
     cmap.set_under(color="white")  # Color for free space
     cmap.set_over(color="black")  # Color for occupied space
     cmap.set_bad(color="lightgray")  # Color for unknown space
@@ -29,6 +31,8 @@ def add_occupancy_grid_to_plot(
             occupancy_map_origin[1],
             occupancy_map_origin[1] + occupancy_map.shape[0] * occupancy_map_resolution,
         ],
+        # vmin=0,
+        # vmax=100,
     )
 
     # Add labels and title

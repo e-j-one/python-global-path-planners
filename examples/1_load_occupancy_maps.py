@@ -7,8 +7,9 @@ from path_planners.utils.gridmap_utils import load_yaml_config, load_occupancy_m
 from path_planners.utils.plot_utils import plot_occupancy_grid
 
 if __name__ == "__main__":
+    map_name = "World0"  # "test_occupancy_map_0"
     yaml_file_path = os.path.join(
-        os.path.dirname(__file__), "../occupancy_maps/World0.yaml"
+        os.path.dirname(__file__), "../occupancy_maps/" + map_name + ".yaml"
     )
     map_config = load_yaml_config(yaml_file_path)
 

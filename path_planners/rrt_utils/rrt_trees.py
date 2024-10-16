@@ -87,8 +87,8 @@ class RrtTree:
 
 
 class RrtStarTree(RrtTree):
-    def __init__(self, near_node_dist_trheshold: float):
-        self.near_node_dist_trheshold = near_node_dist_trheshold
+    def __init__(self, near_node_dist_threshold: float):
+        self.near_node_dist_threshold = near_node_dist_threshold
 
         self._nodes: List[RrtStarNode] = []
         self._pose_to_idx_map = {}
@@ -134,7 +134,7 @@ class RrtStarTree(RrtTree):
 
     def find_near_nodes(self, new_node_pos: Tuple[float, float]) -> List[int]:
         near_nodes_idx = self._kd_pos_tree.query_ball_point(
-            np.array([new_node_pos]), self.near_node_dist_trheshold
+            np.array([new_node_pos]), self.near_node_dist_threshold
         )
         return near_nodes_idx[0]
 
@@ -162,13 +162,15 @@ class RrtStarTree(RrtTree):
 
     def find_optimal_parent_and_add_node_to_tree(
         self,
-        new_node_pose: Tuple[float, float, float],
+        new_node_poses: List[Tuple[float, float, float]],
         collision_free_near_nodes_idx: List[int],
         cost_to_collision_free_near_nodes: List[float],
     ) -> Tuple[int, float]:
         optimal_parent = None
+        new_node_pose_selected = None
         min_cost = float("inf")
         cost_to_parent = None
+
         for iter_idx, near_node_idx in enumerate(collision_free_near_nodes_idx):
             cost_via_near_node = (
                 self._nodes[near_node_idx].get_cost()
@@ -178,8 +180,11 @@ class RrtStarTree(RrtTree):
                 min_cost = cost_via_near_node
                 cost_to_parent = cost_to_collision_free_near_nodes[iter_idx]
                 optimal_parent = near_node_idx
+                new_node_pose_selected = new_node_poses[iter_idx]
 
         if optimal_parent is None:
             raise ValueError("No optimal parent found")
 
-        return self.add_node(new_node_pose, optimal_parent, min_cost, cost_to_parent)
+        return self.add_node(
+            new_node_pose_selected, optimal_parent, min_cost, cost_to_parent
+        )

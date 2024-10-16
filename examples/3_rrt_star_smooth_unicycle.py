@@ -8,7 +8,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from path_planners.utils.gridmap_utils import load_occupancy_map_by_config_path
 from path_planners.utils.plot_utils import plot_occupancy_grid
-from path_planners.rrt_unicycle import RrtUnicyclePlanner
+from path_planners.rrt_star_smooth_unicycle import RrtStarSmoothUnicyclePlanner
 
 
 # fix seed
@@ -30,10 +30,11 @@ if __name__ == "__main__":
         "goal_reach_dist_threshold": 0.5,
         "goal_reach_angle_threshold": 0.1 * np.pi,
         "goal_sample_rate": 0.1,
-        "max_iter": int(1e6),
+        "max_iter": int(5000),
         "max_drive_dist": 0.5,
         "linear_velocity": 1.0,
         "max_angular_velocity": 12.0,
+        "near_node_dist_threshold": 1.0,
     }
 
     # start_pose = (0.0, 0.0, 0.0)
@@ -42,7 +43,9 @@ if __name__ == "__main__":
     start_pose = (-40.0, 5.0, 0.0)
     goal_pose = (15.0, 0.0, 0.0)
 
-    rrt_unicycle_path_planner = RrtUnicyclePlanner(**rrt_unicycle_config)
+    rrt_unicycle_path_planner = RrtStarSmoothUnicyclePlanner(
+        **rrt_unicycle_config, render_tree_during_planning=True
+    )
 
     rrt_unicycle_path_planner.set_occupancy_map(
         occupancy_map,

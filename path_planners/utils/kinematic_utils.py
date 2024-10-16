@@ -388,3 +388,19 @@ def get_unicycle_path(
     # DebugUtils.print_path(path)
 
     return path
+
+
+def interpolate_path_using_arc(path: List[Tuple[float, float, float]], d_s: float):
+    """
+    Interpolate the path using the arc path with the given resolution
+    - For each two consecutive poses, get the arc path between the poses and interpolate the path
+    """
+    interpolated_path = []
+    for i in range(len(path) - 1):
+        pose_i = path[i]
+        pos_f = path[i + 1][:2]
+        interpolated_path += get_unicycle_path(pose_i, pos_f, d_s)[:-1]
+
+    interpolated_path.append(path[-1])
+
+    return interpolated_path
