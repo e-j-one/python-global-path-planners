@@ -10,11 +10,15 @@ import path_planners.utils.plot_utils as PlotUtils
 class PathPlanner:
     def __init__(
         self,
+        terminate_on_goal_reached: bool = True,
         goal_reach_dist_threshold: float = 0.5,
         goal_reach_angle_threshold: float = 0.1 * np.pi,
+        occupancy_map_obstacle_padding_dist: float = 0.5,
     ):
+        self._terminate_on_goal_reached = terminate_on_goal_reached
         self._goal_reach_dist_threshold = goal_reach_dist_threshold
         self._goal_reach_angle_threshold = goal_reach_angle_threshold
+        self._occupancy_map_obstacle_padding_dist = occupancy_map_obstacle_padding_dist
 
         self._occupancy_map = None
         self._occupancy_map_resolution = None
@@ -45,6 +49,10 @@ class PathPlanner:
         self._y_min = origin[1]
         self._x_max = origin[0] + resolution * occupancy_map.shape[1]
         self._y_max = origin[1] + resolution * occupancy_map.shape[0]
+
+        self._padded_occupancy_map = GridmapUtils.get_padded_occupancy_map(
+            occupancy_map, self._occupancy_map_obstacle_padding_dist, resolution
+        )
 
     def plan_global_path(
         self,
@@ -100,7 +108,7 @@ class PathPlanner:
         Return True if there is a collision between the near node and the new node. Otherwise, return False.
         """
         return GridmapUtils.check_collision_for_path(
-            self._occupancy_map,
+            self._padded_occupancy_map,
             self._occupancy_map_resolution,
             self._occupancy_map_origin,
             path,

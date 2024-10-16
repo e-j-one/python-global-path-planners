@@ -81,7 +81,8 @@ def plot_global_path(
     path: List[Tuple[float, float, float]],
 ):
     # Create a figure and axis
-    plt.figure(figsize=(8, 8))
+    # plt.figure(figsize=(8, 8))
+    plt.figure()
 
     add_occupancy_grid_to_plot(
         occupancy_map, occupancy_map_resolution, occupancy_map_origin

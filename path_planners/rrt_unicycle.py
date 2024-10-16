@@ -1,4 +1,5 @@
 from typing import Tuple, Optional, List
+import time
 
 import numpy as np
 
@@ -21,8 +22,10 @@ class RrtUnicyclePlanner(PathPlanner):
 
     def __init__(
         self,
+        terminate_on_goal_reached: bool = True,
         goal_reach_dist_threshold: float = 0.5,
         goal_reach_angle_threshold: float = 0.1 * np.pi,
+        occupancy_map_obstacle_padding_dist: float = 0.5,
         goal_sample_rate: float = 0.2,
         max_iter: int = 10000,
         max_drive_dist: float = 0.5,
@@ -30,7 +33,12 @@ class RrtUnicyclePlanner(PathPlanner):
         max_angular_velocity: float = 1.0,
         render_tree_during_planning: bool = False,
     ):
-        super().__init__(goal_reach_dist_threshold, goal_reach_angle_threshold)
+        super().__init__(
+            terminate_on_goal_reached,
+            goal_reach_dist_threshold,
+            goal_reach_angle_threshold,
+            occupancy_map_obstacle_padding_dist,
+        )
         self._goal_sample_rate = goal_sample_rate
         self._max_iter = max_iter
         self._max_drive_dist = max_drive_dist
@@ -76,7 +84,7 @@ class RrtUnicyclePlanner(PathPlanner):
         5. Add the new node to the tree with the parent node.
             - The heading of the new node is assigned by the path from the parent node chosen for that node.
         """
-
+        path_planning_start_time = time.time()
         # Initialize the tree with the start node
         self._tree.reset_tree()
         self._tree.add_root(start_pose)
@@ -144,14 +152,21 @@ class RrtUnicyclePlanner(PathPlanner):
 
             # Check if the goal is reached
             if self._check_goal_reachable(new_node_pos, goal_pose):
+                print("Goal is reached !!! sample_iter: ", sample_iter)
                 path_found = True
                 if not self._tree.check_if_pose_in_tree(goal_pose):
                     self._tree.add_node(goal_pose, new_node_idx)
-                break
+                if self._terminate_on_goal_reached:
+                    break
+
+        path_planning_end_time = time.time()
+        print(
+            f"Path planning time: {path_planning_end_time - path_planning_start_time:.2f} sec"
+        )
+        self._plot_tree_with_edge_paths(start_pose, goal_pose, edge_paths)
 
         if path_found:
-            print("Goal is reached !!! sample_iter", sample_iter)
-            self._plot_tree_with_edge_paths(start_pose, goal_pose, edge_paths)
+            print("Path found")
             self._path = self._tree.get_path_from_tree(goal_pose)
             interpolated_unicycle_path = KinematicUtils.interpolate_path_using_arc(
                 self._path, d_s=self._occupancy_map_resolution
