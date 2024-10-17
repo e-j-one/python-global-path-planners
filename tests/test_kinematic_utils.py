@@ -4,9 +4,9 @@ import pytest
 from path_planners.utils.kinematic_utils import (
     check_unicycle_reachability,
     check_if_pose_can_be_connected_by_arc,
-    get_turning_radius_candidates_to_connect_pose_with_two_arcs,
-    get_pose_connecting_arc_paths_by_radius,
-    get_arc_path_length,
+    _get_turning_radius_candidates_to_connect_pose_with_two_arcs,
+    _get_pose_connecting_arc_paths_by_radius,
+    _get_arc_path_length,
     get_pose_to_connect_poses_by_two_arcs,
     calculate_final_yaw_of_arc_path,
     calculate_angular_velocity_to_reach_pos,
@@ -181,12 +181,12 @@ def test_check_if_pose_can_be_connected_by_arc():
         assert check_if_pose_can_be_connected_by_arc(pose_i, pose_f) == False
 
 
-def test_get_turning_radius_candidates_to_connect_pose_with_two_arcs():
+def test__get_turning_radius_candidates_to_connect_pose_with_two_arcs():
     # Test left turn -> right turn with r = 1.0
     for theta in np.linspace(-np.pi, np.pi, 100):
         assert pytest.approx(
             1.0
-        ) in get_turning_radius_candidates_to_connect_pose_with_two_arcs(
+        ) in _get_turning_radius_candidates_to_connect_pose_with_two_arcs(
             (0.0, 0.0, 0.0),
             (2.0 + np.cos(theta), 1.0 + np.sin(theta), theta - 0.5 * np.pi),
         )
@@ -195,7 +195,7 @@ def test_get_turning_radius_candidates_to_connect_pose_with_two_arcs():
     for theta in np.linspace(-np.pi, np.pi, 100):
         assert pytest.approx(
             -1.0
-        ) in get_turning_radius_candidates_to_connect_pose_with_two_arcs(
+        ) in _get_turning_radius_candidates_to_connect_pose_with_two_arcs(
             (0.0, 0.0, 0.0),
             (2.0 + np.cos(theta), -1.0 + np.sin(theta), theta + 0.5 * np.pi),
         )
@@ -203,15 +203,15 @@ def test_get_turning_radius_candidates_to_connect_pose_with_two_arcs():
     # Test pose that can be reached by single arc
     assert pytest.approx(
         1.0
-    ) in get_turning_radius_candidates_to_connect_pose_with_two_arcs(
+    ) in _get_turning_radius_candidates_to_connect_pose_with_two_arcs(
         (0.0, 0.0, 0.0), (1.0, 1.0, 0.5 * np.pi)
     )
 
 
-def test_get_pose_connecting_arc_paths_by_radius():
+def test__get_pose_connecting_arc_paths_by_radius():
     # Test left turn -> right turn with r = 1.0
     for theta in np.linspace(-np.pi, np.pi, 100):
-        assert get_pose_connecting_arc_paths_by_radius(
+        assert _get_pose_connecting_arc_paths_by_radius(
             (0.0, 0.0, 0.0),
             (2.0 + np.cos(theta), 1.0 + np.sin(theta), theta - 0.5 * np.pi),
             1.0,
@@ -219,34 +219,34 @@ def test_get_pose_connecting_arc_paths_by_radius():
 
     # Test right turn -> left turn with r = -1.0
     for theta in np.linspace(-np.pi, np.pi, 100):
-        assert get_pose_connecting_arc_paths_by_radius(
+        assert _get_pose_connecting_arc_paths_by_radius(
             (0.0, 0.0, 0.0),
             (2.0 + np.cos(theta), -1.0 + np.sin(theta), theta + 0.5 * np.pi),
             -1.0,
         ) == pytest.approx((1.0, -1.0, -0.5 * np.pi))
 
 
-def test_get_arc_path_length():
+def test__get_arc_path_length():
     # Test along left turn circle with r = 1.0
     pose_i = (0.0, 0.0, 0.0)
-    assert get_arc_path_length(pose_i, (0.0, 0.0)) == pytest.approx(0.0)
-    assert get_arc_path_length(pose_i, (1.0, 1.0)) == pytest.approx(0.5 * np.pi)
-    assert get_arc_path_length(pose_i, (0.0, 2.0)) == pytest.approx(np.pi)
-    assert get_arc_path_length(pose_i, (-1.0, 1.0)) == pytest.approx(1.5 * np.pi)
+    assert _get_arc_path_length(pose_i, (0.0, 0.0)) == pytest.approx(0.0)
+    assert _get_arc_path_length(pose_i, (1.0, 1.0)) == pytest.approx(0.5 * np.pi)
+    assert _get_arc_path_length(pose_i, (0.0, 2.0)) == pytest.approx(np.pi)
+    assert _get_arc_path_length(pose_i, (-1.0, 1.0)) == pytest.approx(1.5 * np.pi)
     # Test along right turn circle with r = 1.0
     pose_i = (0.0, 0.0, 0.0)
-    assert get_arc_path_length(pose_i, (1.0, -1.0)) == pytest.approx(0.5 * np.pi)
-    assert get_arc_path_length(pose_i, (0.0, -2.0)) == pytest.approx(np.pi)
-    assert get_arc_path_length(pose_i, (-1.0, -1.0)) == pytest.approx(1.5 * np.pi)
+    assert _get_arc_path_length(pose_i, (1.0, -1.0)) == pytest.approx(0.5 * np.pi)
+    assert _get_arc_path_length(pose_i, (0.0, -2.0)) == pytest.approx(np.pi)
+    assert _get_arc_path_length(pose_i, (-1.0, -1.0)) == pytest.approx(1.5 * np.pi)
 
     # Test along axis of heading direction
     pose_i = (0.0, 0.0, 0.0)
-    assert get_arc_path_length(pose_i, (1.0, 0.0)) == pytest.approx(1.0)
-    assert get_arc_path_length(pose_i, (2.0, 0.0)) == pytest.approx(2.0)
-    assert get_arc_path_length(pose_i, (4.0, 0.0)) == pytest.approx(4.0)
-    assert get_arc_path_length(pose_i, (-1.0, 0.0)) == np.inf
-    assert get_arc_path_length(pose_i, (-2.0, 0.0)) == np.inf
-    assert get_arc_path_length(pose_i, (-4.0, 0.0)) == np.inf
+    assert _get_arc_path_length(pose_i, (1.0, 0.0)) == pytest.approx(1.0)
+    assert _get_arc_path_length(pose_i, (2.0, 0.0)) == pytest.approx(2.0)
+    assert _get_arc_path_length(pose_i, (4.0, 0.0)) == pytest.approx(4.0)
+    assert _get_arc_path_length(pose_i, (-1.0, 0.0)) == np.inf
+    assert _get_arc_path_length(pose_i, (-2.0, 0.0)) == np.inf
+    assert _get_arc_path_length(pose_i, (-4.0, 0.0)) == np.inf
 
 
 def test_get_pose_to_connect_poses_by_two_arcs():

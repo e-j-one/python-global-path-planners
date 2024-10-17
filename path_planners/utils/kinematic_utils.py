@@ -83,7 +83,7 @@ def check_if_pose_can_be_connected_by_arc(
     )
 
 
-def get_turning_radius_candidates_to_connect_pose_with_two_arcs(
+def _get_turning_radius_candidates_to_connect_pose_with_two_arcs(
     pose_i: Tuple[float, float, float],
     pose_f: Tuple[float, float, float],
 ) -> List[float]:
@@ -139,7 +139,7 @@ def get_turning_radius_candidates_to_connect_pose_with_two_arcs(
     return turning_radius_candidates
 
 
-def get_pose_connecting_arc_paths_by_radius(
+def _get_pose_connecting_arc_paths_by_radius(
     pose_i: Tuple[float, float, float],
     pose_f: Tuple[float, float, float],
     radius: float,
@@ -182,7 +182,7 @@ def get_pose_connecting_arc_paths_by_radius(
     return (center_mid[0], center_mid[1], yaw)
 
 
-def get_arc_path_length(
+def _get_arc_path_length(
     pose_i: Tuple[float, float, float],
     pos_f: Tuple[float, float],
 ) -> float:
@@ -248,7 +248,7 @@ def get_pose_to_connect_poses_by_two_arcs(
         return None
 
     # 1. Get candidates turning radius of arcs
-    radius_candidates = get_turning_radius_candidates_to_connect_pose_with_two_arcs(
+    radius_candidates = _get_turning_radius_candidates_to_connect_pose_with_two_arcs(
         pose_i, pose_f
     )
 
@@ -266,10 +266,10 @@ def get_pose_to_connect_poses_by_two_arcs(
             continue
 
         # Get the pose connecting two arcs
-        pose_stopover = get_pose_connecting_arc_paths_by_radius(pose_i, pose_f, radius)
-        path_length_of_candidate = get_arc_path_length(
+        pose_stopover = _get_pose_connecting_arc_paths_by_radius(pose_i, pose_f, radius)
+        path_length_of_candidate = _get_arc_path_length(
             pose_i, pose_stopover[:2]
-        ) + get_arc_path_length(pose_stopover, pose_f[:2])
+        ) + _get_arc_path_length(pose_stopover, pose_f[:2])
 
         if path_length_of_candidate < optimal_path_length:
             optimal_path_length = path_length_of_candidate
