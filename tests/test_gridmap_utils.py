@@ -217,7 +217,7 @@ def test_check_if_pos_is_free():
         )
 
 
-def testcheck_path_segments_are_not_larger_than_threshold():
+def test_check_path_segments_are_not_larger_than_threshold():
     # Arrange
     threshold = 1.0
     valid_paths = [

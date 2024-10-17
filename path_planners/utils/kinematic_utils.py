@@ -61,6 +61,28 @@ def check_unicycle_reachability(
     return False
 
 
+def check_if_pose_can_be_connected_by_arc(
+    pose_i: Tuple[float, float, float], pose_f: Tuple[float, float, float]
+):
+    """
+    Check if there exists a valid arc path connecting pose_i and pose_f
+    Return false if the poses are in the same position or the same direction
+    """
+    # Check if yaw_i and yaw_f are aligned
+    if GeometryUtils.check_if_angle_diff_is_below_threshold(
+        pose_i[2], pose_f[2], 1e-12
+    ):
+        return False
+
+    if GeometryUtils.check_if_dist_is_below_threshold(pose_i[:2], pose_f[:2], 1e-12):
+        return False
+
+    pos_f_yaw_from_i_along_arc = calculate_final_yaw_of_arc_path(pose_i, pose_f[:2])
+    return GeometryUtils.check_if_angle_diff_is_below_threshold(
+        pose_f[2], pos_f_yaw_from_i_along_arc, 1e-12
+    )
+
+
 def get_turning_radius_candidates_to_connect_pose_with_two_arcs(
     pose_i: Tuple[float, float, float],
     pose_f: Tuple[float, float, float],
@@ -219,6 +241,11 @@ def get_pose_to_connect_poses_by_two_arcs(
     """
 
     # 0. Check if poses can be connected by straight line or single arc
+    if GeometryUtils.check_if_yaws_and_direction_of_poses_align(pose_i, pose_f):
+        return None
+
+    if check_if_pose_can_be_connected_by_arc(pose_i, pose_f):
+        return None
 
     # 1. Get candidates turning radius of arcs
     radius_candidates = get_turning_radius_candidates_to_connect_pose_with_two_arcs(

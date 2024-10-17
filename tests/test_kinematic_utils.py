@@ -3,6 +3,7 @@ import pytest
 
 from path_planners.utils.kinematic_utils import (
     check_unicycle_reachability,
+    check_if_pose_can_be_connected_by_arc,
     get_turning_radius_candidates_to_connect_pose_with_two_arcs,
     get_pose_connecting_arc_paths_by_radius,
     get_arc_path_length,
@@ -126,6 +127,60 @@ def test_check_unicycle_reachability():
     assert check_unicycle_reachability(pose_i, (1.0, 1.0), 1.0, 1.0) == False
 
 
+def test_check_if_pose_can_be_connected_by_arc():
+    # Arrange
+    _NON_ZERO_OFFSET = 0.01
+    pose_i = (0.0, 0.0, 0.0)
+    pose_f_along_circle = []
+
+    circle_radiuses = [0.5, 1.0, 2.0]
+    theta_candidates_up = np.linspace(0.0 * np.pi, 2.0 * np.pi, 100)
+
+    for radius in circle_radiuses:
+        for theta in theta_candidates_up:
+            if theta != 1.5 * np.pi:
+                pose_f_along_circle.append(
+                    (
+                        0.0 + radius * np.cos(theta),
+                        radius + radius * np.sin(theta),
+                        theta + 0.5 * np.pi,
+                    )
+                )
+            if theta != 0.5 * np.pi:
+                pose_f_along_circle.append(
+                    (
+                        0.0 + radius * np.cos(theta),
+                        -radius + radius * np.sin(theta),
+                        theta - 0.5 * np.pi,
+                    )
+                )
+
+    pose_f_along_line = [
+        (-1.0, 0.0, 0.0),
+        (0.0, 0.0, 0.0),
+        (1.0, 0.0, 0.0),
+        (-1.0, 0.0, np.pi),
+        (0.0, 0.0, np.pi),
+        (1.0, 0.0, np.pi),
+    ]
+
+    unreachable_pose_f = [
+        (1.0, 1.0, 0.0),
+        (1.0, 1.0, np.pi),
+        (1.0, 1.0, -0.5 * np.pi),
+        (-1.0, -1.0, -0.5 * np.pi),
+    ]
+
+    # Act & Assert
+    for pose_f in pose_f_along_circle:
+        assert check_if_pose_can_be_connected_by_arc(pose_i, pose_f) == True
+
+    for pose_f in pose_f_along_line:
+        assert check_if_pose_can_be_connected_by_arc(pose_i, pose_f) == False
+    for pose_f in unreachable_pose_f:
+        assert check_if_pose_can_be_connected_by_arc(pose_i, pose_f) == False
+
+
 def test_get_turning_radius_candidates_to_connect_pose_with_two_arcs():
     # Test left turn -> right turn with r = 1.0
     for theta in np.linspace(-np.pi, np.pi, 100):
@@ -214,19 +269,19 @@ def test_get_pose_to_connect_poses_by_two_arcs():
         get_pose_to_connect_poses_by_two_arcs(pose_i, (0.0, -1.0, 0.0), min_r) == None
     )
 
-    # # Test along the axis of heading direction
-    # pose_i = (0.0, 0.0, 0.0)
-    # pose_f = (1.0, 0.0, 0.0)
-    # assert get_pose_to_connect_poses_by_two_arcs(pose_i, pose_f, min_r) == None
+    # Test along the axis of heading direction
+    pose_i = (0.0, 0.0, 0.0)
+    pose_f = (1.0, 0.0, 0.0)
+    assert get_pose_to_connect_poses_by_two_arcs(pose_i, pose_f, min_r) == None
 
-    # pose_i = (0.0, 0.0, 0.25 * np.pi)
-    # pose_f = (1.0, 1.0, 0.25 * np.pi)
-    # assert get_pose_to_connect_poses_by_two_arcs(pose_i, pose_f, min_r) == None
+    pose_i = (0.0, 0.0, 0.25 * np.pi)
+    pose_f = (1.0, 1.0, 0.25 * np.pi)
+    assert get_pose_to_connect_poses_by_two_arcs(pose_i, pose_f, min_r) == None
 
-    # # Test along the path that can be reached by single arc
-    # pose_i = (0.0, 0.0, 0.0)
-    # pose_f = (1.0, 1.0, 0.5 * np.pi)
-    # assert get_pose_to_connect_poses_by_two_arcs(pose_i, pose_f, min_r) == None
+    # Test along the path that can be reached by single arc
+    pose_i = (0.0, 0.0, 0.0)
+    pose_f = (1.0, 1.0, 0.5 * np.pi)
+    assert get_pose_to_connect_poses_by_two_arcs(pose_i, pose_f, min_r) == None
 
 
 def test_calculate_final_yaw_of_arc_path():
