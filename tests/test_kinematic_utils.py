@@ -195,20 +195,38 @@ def test_get_arc_path_length():
 
 
 def test_get_pose_to_connect_poses_by_two_arcs():
+    # Arrange
     pose_i = (0.0, 0.0, 0.0)
     min_r = 1.0
+
+    # Act
+    label_pose_stopover, label_path_length = get_pose_to_connect_poses_by_two_arcs(
+        pose_i, (2.0, 2.0, 0.0), min_r
+    )
+
+    # Assert
+    assert label_pose_stopover == pytest.approx((1.0, 1.0, 0.5 * np.pi))
+    assert label_path_length == pytest.approx(np.pi)
+
     assert get_pose_to_connect_poses_by_two_arcs(pose_i, (0.0, 0.0, 0.0), min_r) == None
-    # assert get_pose_to_connect_poses_by_two_arcs(pose_i, (0.0, 0.0, 0.0), min_r) == pytest.approx((0.0, 0.0, 0.0), 0.0, np.inf)
     assert get_pose_to_connect_poses_by_two_arcs(pose_i, (0.0, 1.0, 0.0), min_r) == None
     assert (
         get_pose_to_connect_poses_by_two_arcs(pose_i, (0.0, -1.0, 0.0), min_r) == None
     )
 
-    label_pose_stopover, label_path_length = get_pose_to_connect_poses_by_two_arcs(
-        pose_i, (2.0, 2.0, 0.0), min_r
-    )
-    assert label_pose_stopover == pytest.approx((1.0, 1.0, 0.5 * np.pi))
-    assert label_path_length == pytest.approx(np.pi)
+    # # Test along the axis of heading direction
+    # pose_i = (0.0, 0.0, 0.0)
+    # pose_f = (1.0, 0.0, 0.0)
+    # assert get_pose_to_connect_poses_by_two_arcs(pose_i, pose_f, min_r) == None
+
+    # pose_i = (0.0, 0.0, 0.25 * np.pi)
+    # pose_f = (1.0, 1.0, 0.25 * np.pi)
+    # assert get_pose_to_connect_poses_by_two_arcs(pose_i, pose_f, min_r) == None
+
+    # # Test along the path that can be reached by single arc
+    # pose_i = (0.0, 0.0, 0.0)
+    # pose_f = (1.0, 1.0, 0.5 * np.pi)
+    # assert get_pose_to_connect_poses_by_two_arcs(pose_i, pose_f, min_r) == None
 
 
 def test_calculate_final_yaw_of_arc_path():

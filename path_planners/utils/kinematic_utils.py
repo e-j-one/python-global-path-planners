@@ -205,6 +205,9 @@ def get_pose_to_connect_poses_by_two_arcs(
     min_turning_radius: float,
 ) -> Optional[Tuple[Tuple[float, float, float], float, float]]:
     """
+    NOTE: This function only connects two poses with two arcs with the same radius or the straight line.
+    - There can be better path with different radius of the arcs which is not implemented in this function.
+
     Get two arcs with the same radius connecting pose_i and pose_f
     - that has the minimum path length
     - while satisfying the velocity constraints.
@@ -215,10 +218,14 @@ def get_pose_to_connect_poses_by_two_arcs(
     - radius: radius of the arc
     """
 
+    # 0. Check if poses can be connected by straight line or single arc
+
     # 1. Get candidates turning radius of arcs
     radius_candidates = get_turning_radius_candidates_to_connect_pose_with_two_arcs(
         pose_i, pose_f
     )
+
+    # print("radius_candidates", radius_candidates)
 
     # 2. Validate & choose the valid radius
     if len(radius_candidates) == 0:

@@ -8,6 +8,7 @@ from path_planners.utils.geometry_utils import (
     check_if_angle_diff_is_below_threshold,
     check_if_dist_and_angle_diff_are_below_threshold,
     check_if_pos_in_same_side_of_heading,
+    check_if_yaws_and_direction_of_poses_align,
 )
 
 
@@ -156,3 +157,62 @@ def test_check_if_pos_in_same_side_of_heading():
 
     assert check_if_pos_in_same_side_of_heading(pose_i, (-1.0, 0)) == True
     assert check_if_pos_in_same_side_of_heading(pose_i, (-1.0, 1.0)) == True
+
+
+def test_check_if_yaws_and_direction_of_poses_align():
+    # Arrange
+    pose_along_y_eq_0_yaw_0 = [
+        (0.0, 0.0, 0.0),
+        (1.0, 0.0, 0.0),
+        (-1.0, 0.0, 0.0),
+    ]
+    pose_along_y_eq_0_yaw_pi = [
+        (0.0, 0.0, np.pi),
+        (1.0, 0.0, np.pi),
+        (-1.0, 0.0, np.pi),
+        (-1.0, 0.0, -np.pi),
+    ]
+
+    pose_along_x_eq_0_yaw_pos = [
+        (0.0, 0.0, 0.5 * np.pi),
+        (0.0, 1.0, 0.5 * np.pi),
+        (0.0, -1.0, 0.5 * np.pi),
+        (0.0, -1.0, 2.5 * np.pi),
+    ]
+    pose_along_x_eq_0_yaw_neg = [
+        (0.0, 0.0, -0.5 * np.pi),
+        (0.0, 1.0, -0.5 * np.pi),
+        (0.0, -1.0, -0.5 * np.pi),
+        (0.0, -1.0, -0.5 * np.pi),
+        (0.0, -1.0, 1.5 * np.pi),
+    ]
+
+    pose_along_x_eq_y_yaw_quater_pi = [
+        (0.0, 0.0, 0.25 * np.pi),
+        (1.0, 1.0, 0.25 * np.pi),
+        (-1.0, -1.0, 0.25 * np.pi),
+        (-1.0, -1.0, 2.25 * np.pi),
+    ]
+
+    poses_along_lines = [
+        pose_along_y_eq_0_yaw_0,
+        pose_along_y_eq_0_yaw_pi,
+        pose_along_x_eq_0_yaw_pos,
+        pose_along_x_eq_0_yaw_neg,
+        pose_along_x_eq_y_yaw_quater_pi,
+    ]
+
+    # Act & Assert
+    for line_idx_i in range(len(poses_along_lines)):
+        for line_idx_f in range(len(poses_along_lines)):
+            if line_idx_i == line_idx_f:
+                continue
+            for pose_i in poses_along_lines[line_idx_i]:
+                for pose_f in poses_along_lines[line_idx_f]:
+                    assert not check_if_yaws_and_direction_of_poses_align(
+                        pose_i, pose_f
+                    )
+    for line_idx in range(len(poses_along_lines)):
+        for pose_i in poses_along_lines[line_idx]:
+            for pose_f in poses_along_lines[line_idx]:
+                assert check_if_yaws_and_direction_of_poses_align(pose_i, pose_f)
