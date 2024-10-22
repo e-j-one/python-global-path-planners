@@ -1,5 +1,6 @@
 import os
 import sys
+from datetime import datetime
 
 import numpy as np
 
@@ -35,7 +36,7 @@ if __name__ == "__main__":
         "max_iter": int(8000),
         "max_drive_dist": 0.5,
         "linear_velocity": 1.0,
-        "max_angular_velocity": 4.0,
+        "max_angular_velocity": 2.0,
         "near_node_dist_threshold": 1.0,
     }
 
@@ -54,4 +55,34 @@ if __name__ == "__main__":
         occupancy_map_resolution,
         occupancy_map_origin,
     )
-    rrt_unicycle_path_planner.plan_global_path(start_pose, goal_pose, render=True)
+
+    success, path, num_nodes_sampled = rrt_unicycle_path_planner.plan_global_path(
+        start_pose, goal_pose, render=True
+    )
+
+    print("Number of nodes sampled:", num_nodes_sampled)
+    if not success:
+        print("Path not found!")
+        exit()
+
+    print("Path found!")
+    print("Path length:", len(path))
+
+    print("Start pose:", start_pose)
+    print("Goal pose:", goal_pose)
+    print("Path:", path)
+
+    # save path to file
+    curr_date_time_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+    path_file_name = f"rrt_star_smooth_unicycle_{map_name}_{curr_date_time_str}.csv"
+    path = np.array(path)
+    np.savetxt(path_file_name, path, delimiter=",")
+
+    # save start, goal and config to file
+    config_file_name = (
+        f"rrt_star_smooth_unicycle_{map_name}_{curr_date_time_str}_config.txt"
+    )
+    with open(config_file_name, "w") as f:
+        f.write(f"Start pose: {start_pose}\n")
+        f.write(f"Goal pose: {goal_pose}\n")
+        f.write(f"Config: {rrt_unicycle_config}\n")
