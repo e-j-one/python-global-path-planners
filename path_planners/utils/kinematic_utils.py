@@ -437,7 +437,7 @@ def get_unicycle_path(
     return path
 
 
-def interpolate_path_using_arc(path: List[Tuple[float, float, float]], d_s: float):
+def interpolate_path_between_arc(path: List[Tuple[float, float, float]], d_s: float):
     """
     Interpolate the path using the arc path with the given resolution
     - For each two consecutive poses, get the arc path between the poses and interpolate the path
@@ -451,3 +451,84 @@ def interpolate_path_using_arc(path: List[Tuple[float, float, float]], d_s: floa
     interpolated_path.append(path[-1])
 
     return interpolated_path
+
+
+def interpolate_path_using_arc(path: List[Tuple[float, float, float]], d_s: float):
+    """
+    Interpolate the path using the arc path with the given resolution
+    - The pose in original path may not be in the interpolated path
+    """
+    interpolated_path = []
+    interpolated_path.append(path[0])
+
+    distance_to_interpolate_from_last_original_pose = d_s
+
+    for i in range(len(path) - 1):
+        pose_arc_start = path[i]
+        pos_arc_end = path[i + 1][:2]
+
+        arc_length = _get_arc_path_length(pose_arc_start, pos_arc_end)
+
+        if distance_to_interpolate_from_last_original_pose > arc_length:
+            distance_to_interpolate_from_last_original_pose -= arc_length
+            continue
+
+        while True:
+            interpolated_pose = _get_pose_on_arc(
+                pose_arc_start,
+                pos_arc_end,
+                distance_to_interpolate_from_last_original_pose,
+            )
+
+            if interpolated_pose is None:
+                raise ValueError("The interpolated pose is None")
+
+            interpolated_path.append(interpolated_pose)
+
+            distance_to_interpolate_from_last_original_pose += d_s
+            if distance_to_interpolate_from_last_original_pose > arc_length:
+                distance_to_interpolate_from_last_original_pose -= arc_length
+                break
+
+    return interpolated_path
+
+
+def _get_pose_on_arc(
+    pose_i: Tuple[float, float, float],
+    pos_f: Tuple[float, float],
+    distance_from_pose_i: float,
+) -> Optional[Tuple[float, float, float]]:
+    """
+    Returns
+    - pose: pose on the arc path from pose_i to pos_f with the given distance
+    - is pose on the arc: True if the pose is on the arc path, False if the pose is beyond the pos_f
+    """
+    if _get_arc_path_length(pose_i, pos_f) < distance_from_pose_i:
+        return None
+
+    turning_radius = GeometryUtils.calculate_arc_path_radius(pose_i, pos_f)
+    if turning_radius == np.inf:  # Straight line
+        return (
+            pose_i[0] + distance_from_pose_i * np.cos(pose_i[2]),
+            pose_i[1] + distance_from_pose_i * np.sin(pose_i[2]),
+            pose_i[2],
+        )
+
+    if turning_radius == 0:  # Same position
+        raise ValueError("The pose_i and pos_f are in the same position")
+
+    turning_center = (
+        pose_i[0] + turning_radius * np.cos(pose_i[2] + 0.5 * np.pi),
+        pose_i[1] + turning_radius * np.sin(pose_i[2] + 0.5 * np.pi),
+    )
+    d_theta = distance_from_pose_i / turning_radius
+    radius_dir_sign = np.sign(turning_radius)
+
+    theta_start = MathUtils.normalize_angle(pose_i[2] - radius_dir_sign * 0.5 * np.pi)
+    theta = theta_start + d_theta
+
+    return (
+        turning_center[0] + radius_dir_sign * turning_radius * np.cos(theta),
+        turning_center[1] + radius_dir_sign * turning_radius * np.sin(theta),
+        MathUtils.normalize_angle(theta + radius_dir_sign * 0.5 * np.pi),
+    )

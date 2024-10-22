@@ -14,11 +14,15 @@ class PathPlanner:
         goal_reach_dist_threshold: float = 0.5,
         goal_reach_angle_threshold: float = 0.1 * np.pi,
         occupancy_map_obstacle_padding_dist: float = 0.5,
+        interpolate_path: bool = False,
+        d_s: float = 0.25,
     ):
         self._terminate_on_goal_reached = terminate_on_goal_reached
         self._goal_reach_dist_threshold = goal_reach_dist_threshold
         self._goal_reach_angle_threshold = goal_reach_angle_threshold
         self._occupancy_map_obstacle_padding_dist = occupancy_map_obstacle_padding_dist
+        self._interpolate_path = interpolate_path
+        self._d_s = d_s
 
         self._occupancy_map = None
         self._occupancy_map_resolution = None
@@ -59,6 +63,8 @@ class PathPlanner:
         start_pose: Tuple[float, float, float],
         goal_pose: Tuple[float, float, float],
         render=False,
+        save_to_file=False,
+        plot_file_name: str = "path.png",
     ) -> Tuple[bool, List[Tuple[int, int]], int]:
         """
         Plan a global path from start to goal pose
@@ -69,6 +75,9 @@ class PathPlanner:
         """
         path, num_nodes_sampled = self._plan_path(start_pose, goal_pose)
 
+        if self._interpolate_path:
+            path = self._interpolate_poses_on_path(path)
+
         if render:
             PlotUtils.plot_global_path(
                 self._occupancy_map,
@@ -77,6 +86,17 @@ class PathPlanner:
                 start_pose,
                 goal_pose,
                 path,
+            )
+
+        if save_to_file:
+            PlotUtils.save_global_path_to_file(
+                self._occupancy_map,
+                self._occupancy_map_resolution,
+                self._occupancy_map_origin,
+                start_pose,
+                goal_pose,
+                path,
+                plot_file_name,
             )
 
         success = path is not None
@@ -134,3 +154,12 @@ class PathPlanner:
             np.random.uniform(self._x_min, self._x_max),
             np.random.uniform(self._y_min, self._y_max),
         )
+
+    def _interpolate_poses_on_path(
+        self, path: List[Tuple[float, float, float]]
+    ) -> List[Tuple[float, float, float]]:
+        """
+        Interpolate the path by adding or removing points in the path.
+        - The distance between two consecutive points should be self._d_s.
+        """
+        raise NotImplementedError
