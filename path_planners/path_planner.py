@@ -14,11 +14,15 @@ class PathPlanner:
         goal_reach_dist_threshold: float = 0.5,
         goal_reach_angle_threshold: float = 0.1 * np.pi,
         occupancy_map_obstacle_padding_dist: float = 0.5,
+        interpolate_path: bool = False,
+        d_s: float = 0.25,
     ):
         self._terminate_on_goal_reached = terminate_on_goal_reached
         self._goal_reach_dist_threshold = goal_reach_dist_threshold
         self._goal_reach_angle_threshold = goal_reach_angle_threshold
         self._occupancy_map_obstacle_padding_dist = occupancy_map_obstacle_padding_dist
+        self._interpolate_path = interpolate_path
+        self._d_s = d_s
 
         self._occupancy_map = None
         self._occupancy_map_resolution = None
@@ -70,6 +74,9 @@ class PathPlanner:
         :return: success, path, number of nodes sampled
         """
         path, num_nodes_sampled = self._plan_path(start_pose, goal_pose)
+
+        if self._interpolate_path:
+            path = self._interpolate_poses_on_path(path)
 
         if render:
             PlotUtils.plot_global_path(
@@ -147,3 +154,12 @@ class PathPlanner:
             np.random.uniform(self._x_min, self._x_max),
             np.random.uniform(self._y_min, self._y_max),
         )
+
+    def _interpolate_poses_on_path(
+        self, path: List[Tuple[float, float, float]]
+    ) -> List[Tuple[float, float, float]]:
+        """
+        Interpolate the path by adding or removing points in the path.
+        - The distance between two consecutive points should be self._d_s.
+        """
+        raise NotImplementedError

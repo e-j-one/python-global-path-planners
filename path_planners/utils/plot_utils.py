@@ -122,6 +122,10 @@ def save_global_path_to_file(
     # plot path
     if path is not None:
         plt.plot([x[0] for x in path], [x[1] for x in path])
+    # plot points on path
+    for i in range(len(path)):
+        plt.plot(path[i][0], path[i][1], "bo", markersize=2)
+
     # plot start and goal position
     plt.plot(start_pose[0], start_pose[1], "go")
     plt.plot(goal_pose[0], goal_pose[1], "ro")

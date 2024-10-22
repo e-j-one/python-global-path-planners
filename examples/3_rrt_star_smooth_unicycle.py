@@ -29,6 +29,8 @@ if __name__ == "__main__":
 
     rrt_unicycle_config = {
         "terminate_on_goal_reached": False,
+        "interpolate_path": True,
+        "d_s": 0.5,
         "goal_reach_dist_threshold": 0.5,
         "goal_reach_angle_threshold": 0.1 * np.pi,
         "occupancy_map_obstacle_padding_dist": 0.5,
@@ -47,7 +49,7 @@ if __name__ == "__main__":
     goal_pose = (15.0, 0.0, 0.0)
 
     rrt_unicycle_path_planner = RrtStarSmoothUnicyclePlanner(
-        **rrt_unicycle_config, render_tree_during_planning=True
+        **rrt_unicycle_config, render_tree_during_planning=False
     )
 
     rrt_unicycle_path_planner.set_occupancy_map(
@@ -71,6 +73,12 @@ if __name__ == "__main__":
     print("Start pose:", start_pose)
     print("Goal pose:", goal_pose)
     print("Path:", path)
+
+    # print distance between points
+    path = np.array(path)
+    for i in range(1, len(path)):
+        distance = np.linalg.norm(path[i][:2] - path[i - 1][:2])
+        print(f"Distance between {path[i]} and {path[i-1]}: {distance}")
 
     # save path to file
     curr_date_time_str = datetime.now().strftime("%Y%m%d_%H%M%S")

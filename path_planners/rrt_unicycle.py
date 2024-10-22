@@ -26,6 +26,8 @@ class RrtUnicyclePlanner(PathPlanner):
         goal_reach_dist_threshold: float = 0.5,
         goal_reach_angle_threshold: float = 0.1 * np.pi,
         occupancy_map_obstacle_padding_dist: float = 0.5,
+        interpolate_path: bool = False,
+        d_s: float = 0.25,
         goal_sample_rate: float = 0.2,
         max_iter: int = 10000,
         max_drive_dist: float = 0.5,
@@ -38,6 +40,8 @@ class RrtUnicyclePlanner(PathPlanner):
             goal_reach_dist_threshold,
             goal_reach_angle_threshold,
             occupancy_map_obstacle_padding_dist,
+            interpolate_path,
+            d_s,
         )
         self._goal_sample_rate = goal_sample_rate
         self._max_iter = max_iter
@@ -205,6 +209,11 @@ class RrtUnicyclePlanner(PathPlanner):
 
     def _sample_random_pos(self):
         return super()._sample_random_pos()
+
+    def _interpolate_poses_on_path(
+        self, path: List[Tuple[float, float, float]]
+    ) -> List[Tuple[float, float, float]]:
+        return KinematicUtils.interpolate_path_using_arc(path, self._d_s)
 
     def _plot_tree(
         self,
