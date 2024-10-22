@@ -59,6 +59,8 @@ class PathPlanner:
         start_pose: Tuple[float, float, float],
         goal_pose: Tuple[float, float, float],
         render=False,
+        save_to_file=False,
+        plot_file_name: str = "path.png",
     ) -> Tuple[bool, List[Tuple[int, int]], int]:
         """
         Plan a global path from start to goal pose
@@ -77,6 +79,17 @@ class PathPlanner:
                 start_pose,
                 goal_pose,
                 path,
+            )
+
+        if save_to_file:
+            PlotUtils.save_global_path_to_file(
+                self._occupancy_map,
+                self._occupancy_map_resolution,
+                self._occupancy_map_origin,
+                start_pose,
+                goal_pose,
+                path,
+                plot_file_name,
             )
 
         success = path is not None

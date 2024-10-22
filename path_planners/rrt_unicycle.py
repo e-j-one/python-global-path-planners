@@ -64,8 +64,12 @@ class RrtUnicyclePlanner(PathPlanner):
         start_pose: Tuple[float, float, float],
         goal_pose: Tuple[float, float, float],
         render=False,
+        save_to_file=False,
+        plot_file_name: str = "rrt_unicycle_path.png",
     ) -> Tuple[bool, List[Tuple[int, int]], int]:
-        return super().plan_global_path(start_pose, goal_pose, render)
+        return super().plan_global_path(
+            start_pose, goal_pose, render, save_to_file, plot_file_name
+        )
 
     def _plan_path(
         self,
@@ -110,11 +114,7 @@ class RrtUnicyclePlanner(PathPlanner):
             new_node_pos = RrtUtils.drive_pos(
                 nearest_node_pos, random_pos, self._max_drive_dist
             )
-            # print(f"random_pos: {random_pos[0]:.2f}, {random_pos[1]:.2f}")
-            # print(f"\tnew_node_pos: {new_node_pos[0]:.2f}, {new_node_pos[1]:.2f}")
-            # print(
-            #     f"\tnearest_node_pose: {nearest_node_pose[0]:.2f}, {nearest_node_pose[1]:.2f}, {nearest_node_pose[2]:.2f}"
-            # )
+
             # 4. Check collision and reachability
             # - Get arc path from the nearest node to the new node
             if not KinematicUtils.check_unicycle_reachability(
@@ -123,21 +123,17 @@ class RrtUnicyclePlanner(PathPlanner):
                 self._linear_velocity,
                 self._max_angular_velocity,
             ):
-                # print("\tUnreachable")
                 continue
 
             path_to_new_node = KinematicUtils.get_unicycle_path(
                 nearest_node_pose,
                 new_node_pos,
-                d_s=self._occupancy_map_resolution,  # = collision checkresolution
+                d_s=self._occupancy_map_resolution,  # = collision check resolution
             )
-            # print("\t----------------")
-            # DebugUtils.print_path(path=path_to_new_node)
-            # print("\t----------------")
 
             if self._check_collision(path_to_new_node):
-                # print("\tcollision")
                 continue
+
             edge_paths.append(path_to_new_node)
 
             new_node_yaw = KinematicUtils.calculate_final_yaw_of_arc_path(
@@ -169,10 +165,10 @@ class RrtUnicyclePlanner(PathPlanner):
         if path_found:
             print("Path found")
             self._path = self._tree.get_path_from_tree(goal_pose)
-            interpolated_unicycle_path = KinematicUtils.interpolate_path_using_arc(
-                self._path, d_s=self._occupancy_map_resolution
-            )
-            self._path = interpolated_unicycle_path
+            # interpolated_unicycle_path = KinematicUtils.interpolate_path_using_arc(
+            #     self._path, d_s=self._occupancy_map_resolution
+            # )
+            # self._path = interpolated_unicycle_path
             return self._path, sample_iter
         else:
             print("Max iteration reached !!!")

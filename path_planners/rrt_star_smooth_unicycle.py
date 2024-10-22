@@ -57,8 +57,12 @@ class RrtStarSmoothUnicyclePlanner(RrtUnicyclePlanner):
         start_pose: Tuple[float, float, float],
         goal_pose: Tuple[float, float, float],
         render=False,
+        save_to_file=False,
+        plot_file_name: str = "rrt_star_smooth_unicycle_path.png",
     ) -> Tuple[bool, List[Tuple[int, int]], int]:
-        return super().plan_global_path(start_pose, goal_pose, render)
+        return super().plan_global_path(
+            start_pose, goal_pose, render, save_to_file, plot_file_name
+        )
 
     def _plan_path(
         self,
@@ -153,15 +157,17 @@ class RrtStarSmoothUnicyclePlanner(RrtUnicyclePlanner):
         print(
             f"Path planning time: {path_planning_end_time - path_planning_start_time:.2f} sec"
         )
-        self._plot_tree(start_pose, goal_pose)
+
+        if self._render_tree_during_planning:
+            self._plot_tree(start_pose, goal_pose)
 
         if path_found:
             print("Path found")
             self._path = self._tree.get_path_from_tree(goal_pose)
-            interpolated_unicycle_path = KinematicUtils.interpolate_path_using_arc(
-                self._path, self._occupancy_map_resolution
-            )
-            self._path = interpolated_unicycle_path
+            # interpolated_unicycle_path = KinematicUtils.interpolate_path_using_arc(
+            #     self._path, self._occupancy_map_resolution
+            # )
+            # self._path = interpolated_unicycle_path
             return self._path, sample_iter
         else:
             print("Max iteration reached !!!")
