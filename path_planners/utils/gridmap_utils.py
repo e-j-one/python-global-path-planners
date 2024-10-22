@@ -1,5 +1,5 @@
 import os
-from typing import Tuple, List
+from typing import Tuple, List, Optional
 import warnings
 
 import cv2
@@ -17,13 +17,16 @@ def load_yaml_config(yaml_path) -> dict:
 
 # Load and process occupancy map using ROS conventions
 def load_occupancy_map(
-    config: dict, flip_y_axis=False
+    config: dict, map_img_dir: Optional[str] = None, flip_y_axis=False
 ) -> Tuple[np.ndarray, float, List[float]]:
     # image_path = os.path.join(
     #     os.path.dirname(__file__), "../occupancy_maps", config["image"]
     # )
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-    image_path = os.path.join(project_root, "occupancy_maps", config["image"])
+    if map_img_dir is None:
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+        image_path = os.path.join(project_root, "occupancy_maps", config["image"])
+    else:
+        image_path = os.path.join(map_img_dir, config["image"])
 
     if not os.path.exists(image_path):
         raise FileNotFoundError(f"Image file {image_path} not found.")
@@ -65,9 +68,11 @@ def load_occupancy_map(
     return occupancy_map, resolution, origin
 
 
-def load_occupancy_map_by_config_path(config_file_path: str, flip_y_axis: bool = False):
+def load_occupancy_map_by_config_path(
+    config_file_path: str, map_img_dir: Optional[str] = None, flip_y_axis: bool = False
+):
     map_config = load_yaml_config(config_file_path)
-    return load_occupancy_map(map_config, flip_y_axis)
+    return load_occupancy_map(map_config, map_img_dir, flip_y_axis)
 
 
 def pos_to_grid_cell_idx(
