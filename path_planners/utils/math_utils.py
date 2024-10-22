@@ -1,4 +1,17 @@
+from typing import Tuple
+import math
+
 import numpy as np
+
+
+def calculate_dist(pos_i: Tuple[float, float], pos_f: Tuple[float, float]) -> float:
+    """
+    Calculate the distance between the two positions
+    """
+    return math.sqrt(
+        (pos_i[0] - pos_f[0]) * (pos_i[0] - pos_f[0])
+        + (pos_i[1] - pos_f[1]) * (pos_i[1] - pos_f[1])
+    )
 
 
 def normalize_angle(angle: float) -> float:
