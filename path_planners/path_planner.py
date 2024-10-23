@@ -94,6 +94,9 @@ class PathPlanner:
         if path is not None and self._interpolate_path:
             path = self._interpolate_poses_on_path(path)
 
+        if self._check_collision(path):
+            path = None
+
         success = path is not None
         if path is None:
             path = []
