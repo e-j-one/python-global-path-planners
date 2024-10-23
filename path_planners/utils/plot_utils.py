@@ -133,3 +133,4 @@ def save_global_path_to_file(
     # Show the plot
     plt.grid(False)
     plt.savefig(plot_file_name)
+    plt.close()
