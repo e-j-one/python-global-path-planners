@@ -5,6 +5,7 @@ import numpy as np
 import path_planners.utils.geometry_utils as GeometryUtils
 import path_planners.utils.gridmap_utils as GridmapUtils
 import path_planners.utils.plot_utils as PlotUtils
+import path_planners.utils.math_utils as MathUtils
 
 
 class PathPlanner:
@@ -105,6 +106,30 @@ class PathPlanner:
 
         return success, path, num_nodes_sampled
 
+    def sample_start_goal_poses(
+        self, min_dist: float = 1.0
+    ) -> Tuple[Tuple[float, float, float], Tuple[float, float, float]]:
+        """
+        Sample start and goal poses.
+        Poses are sampled in collision free region considering the padding distance.
+        Yaw is sampled from (-pi, pi].
+        """
+        if min_dist >= np.linalg.norm(
+            [self._x_max - self._x_min, self._y_max - self._y_min]
+        ):
+            raise ValueError(
+                "The minimum distance between start and goal poses should be less than the map size!"
+            )
+
+        while True:
+            start_pos = self._sample_random_collision_free_pos()
+            goal_pos = self._sample_random_collision_free_pos()
+            if MathUtils.calculate_dist(start_pos[:2], goal_pos[:2]) >= min_dist:
+                break
+        start_pose = (*start_pos, -np.random.uniform(-np.pi, np.pi))
+        goal_pose = (*goal_pos, -np.random.uniform(-np.pi, np.pi))
+        return start_pose, goal_pose
+
     def _plan_path(
         self,
         start_pose: Tuple[float, float, float],
@@ -154,6 +179,20 @@ class PathPlanner:
             np.random.uniform(self._x_min, self._x_max),
             np.random.uniform(self._y_min, self._y_max),
         )
+
+    def _sample_random_collision_free_pos(self) -> Tuple[float, float, float]:
+        """
+        Sample a random position that is obstacle free.
+        """
+        while True:
+            pos = self._sample_random_pos()
+            if GridmapUtils.check_if_pos_is_free(
+                self._padded_occupancy_map,
+                self._occupancy_map_resolution,
+                self._occupancy_map_origin,
+                pos,
+            ):
+                return pos
 
     def _interpolate_poses_on_path(
         self, path: List[Tuple[float, float, float]]

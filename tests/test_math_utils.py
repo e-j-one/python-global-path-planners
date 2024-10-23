@@ -1,6 +1,17 @@
 import numpy as np
 
-from path_planners.utils.math_utils import normalize_angle, normalize_angle_positive
+from path_planners.utils.math_utils import (
+    calculate_dist,
+    normalize_angle,
+    normalize_angle_positive,
+)
+
+
+def test_calculate_dist():
+    assert calculate_dist((0.0, 0.0), (0.0, 0.0)) == 0.0
+    assert calculate_dist((0.0, 0.0), (1.0, 0.0)) == 1.0
+    assert calculate_dist((0.0, 0.0), (0.0, 1.0)) == 1.0
+    assert calculate_dist((0.0, 0.0), (1.0, 1.0)) == np.sqrt(2.0)
 
 
 def test_normalize_angle():
