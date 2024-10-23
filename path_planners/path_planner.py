@@ -91,11 +91,11 @@ class PathPlanner:
         """
         path, num_nodes_sampled = self._plan_path(start_pose, goal_pose)
 
-        if path is not None and self._interpolate_path:
-            path = self._interpolate_poses_on_path(path)
-
-        if self._check_collision(path):
-            path = None
+        if path is not None:
+            if self._interpolate_path:
+                path = self._interpolate_poses_on_path(path)
+            if self._check_collision(path):
+                path = None
 
         success = path is not None
         if path is None:

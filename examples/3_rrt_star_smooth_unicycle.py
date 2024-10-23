@@ -48,6 +48,9 @@ if __name__ == "__main__":
     start_pose = (-40.0, 5.0, 0.0)
     goal_pose = (15.0, 0.0, 0.0)
 
+    # start_pose = (-12.0, 15.0, 0.0)
+    # goal_pose = (15.0, 0.0, 0.0)
+
     rrt_unicycle_path_planner = RrtStarSmoothUnicyclePlanner(
         **rrt_unicycle_config, render_tree_during_planning=False
     )
