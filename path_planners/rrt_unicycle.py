@@ -68,18 +68,18 @@ class RrtUnicyclePlanner(PathPlanner):
         start_pose: Tuple[float, float, float],
         goal_pose: Tuple[float, float, float],
         render=False,
-        save_to_file=False,
+        save_plot_to_file=False,
         plot_file_name: str = "rrt_unicycle_path.png",
-    ) -> Tuple[bool, List[Tuple[int, int]], int]:
+    ) -> Tuple[bool, List[Tuple[float, float, float]], int]:
         return super().plan_global_path(
-            start_pose, goal_pose, render, save_to_file, plot_file_name
+            start_pose, goal_pose, render, save_plot_to_file, plot_file_name
         )
 
     def _plan_path(
         self,
         start_pose: Tuple[float, float, float],
         goal_pose: Tuple[float, float, float],
-    ) -> Tuple[Optional[List[Tuple[int, int]]], int]:
+    ) -> Tuple[Optional[List[Tuple[float, float, float]]], int]:
         """
         Plan a path from start to goal using rrt star algorithm for wheeled vehicle.
 
