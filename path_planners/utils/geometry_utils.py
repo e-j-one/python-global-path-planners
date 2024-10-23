@@ -133,9 +133,9 @@ def check_if_yaws_and_direction_of_poses_align(
     vector_i_f = (pose_f[0] - pose_i[0], pose_f[1] - pose_i[1])
     vector_i_f_yaw = np.arctan2(vector_i_f[1], vector_i_f[0])
     vector_f_i_yaw = np.arctan2(-vector_i_f[1], -vector_i_f[0])
-    print("vector_i_f_yaw", vector_i_f_yaw, "vector_f_i_yaw", vector_f_i_yaw)
+    # print("vector_i_f_yaw", vector_i_f_yaw, "vector_f_i_yaw", vector_f_i_yaw)
 
-    print("pose_i", pose_i, "pose_f", pose_f)
+    # print("pose_i", pose_i, "pose_f", pose_f)
 
     if check_if_angle_diff_is_below_threshold(
         vector_i_f_yaw, pose_i[2], 1e-12
