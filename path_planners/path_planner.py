@@ -64,19 +64,34 @@ class PathPlanner:
         start_pose: Tuple[float, float, float],
         goal_pose: Tuple[float, float, float],
         render=False,
-        save_to_file=False,
+        save_plot_to_file=False,
         plot_file_name: str = "path.png",
-    ) -> Tuple[bool, List[Tuple[int, int]], int]:
+    ) -> Tuple[bool, List[Tuple[float, float, float]], int]:
         """
         Plan a global path from start to goal pose
-        :param start_pose: start pose
-        :param goal_pose: goal pose
-        :param render: render the path
-        :return: success, path, number of nodes sampled
+
+        Parameters
+        ----------
+        start_pose : Tuple[float, float, float]
+            start pose (x, y, yaw)
+        goal_pose : Tuple[float, float, float]
+            goal pose (x, y, yaw)
+        render : bool, optional
+            Whether to render the path, by default False
+        save_plot_to_file : bool, optional
+            Whether to save the path to a file, by default False
+        plot_file_name : str, optional
+            The name of the file to save the path to, by default "path.png"
+
+        Returns
+        -------
+        success : bool
+        path : List[Tuple[float, float, float]]
+        number of nodes sampled : int
         """
         path, num_nodes_sampled = self._plan_path(start_pose, goal_pose)
 
-        if self._interpolate_path:
+        if path is not None and self._interpolate_path:
             path = self._interpolate_poses_on_path(path)
 
         if render:
@@ -89,7 +104,7 @@ class PathPlanner:
                 path,
             )
 
-        if save_to_file:
+        if save_plot_to_file:
             PlotUtils.save_global_path_to_file(
                 self._occupancy_map,
                 self._occupancy_map_resolution,
@@ -134,12 +149,23 @@ class PathPlanner:
         self,
         start_pose: Tuple[float, float, float],
         goal_pose: Tuple[float, float, float],
-    ) -> Tuple[Optional[List[Tuple[int, int]]], int]:
+    ) -> Tuple[Optional[List[Tuple[float, float, float]]], int]:
         """
         Plan a path from start to goal pose
-        :param start_pose: start pose
-        :param goal_pose: goal pose
-        :return: path, number of nodes sampled
+
+        Parameters
+        ----------
+        start_pose : Tuple[float, float, float]
+            start pose (x, y, yaw)
+        goal_pose : Tuple[float, float, float]
+            goal pose (x, y, yaw)
+
+        Returns
+        -------
+        path : Optional[List[Tuple[float, float, float]]]
+            The planned path. None if the path is not found.
+        num_nodes_sampled : int
+            The number of nodes sampled during the planning
         """
         del start_pose, goal_pose
         # this method should be implemented in the child class

@@ -59,7 +59,7 @@ if __name__ == "__main__":
     )
 
     success, path, num_nodes_sampled = rrt_unicycle_path_planner.plan_global_path(
-        start_pose, goal_pose, render=False, save_to_file=True
+        start_pose, goal_pose, render=False, save_plot_to_file=True
     )
 
     print("Number of nodes sampled:", num_nodes_sampled)

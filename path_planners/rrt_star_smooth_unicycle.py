@@ -61,18 +61,18 @@ class RrtStarSmoothUnicyclePlanner(RrtUnicyclePlanner):
         start_pose: Tuple[float, float, float],
         goal_pose: Tuple[float, float, float],
         render=False,
-        save_to_file=False,
+        save_plot_to_file=False,
         plot_file_name: str = "rrt_star_smooth_unicycle_path.png",
-    ) -> Tuple[bool, List[Tuple[int, int]], int]:
+    ) -> Tuple[bool, List[Tuple[float, float, float]], int]:
         return super().plan_global_path(
-            start_pose, goal_pose, render, save_to_file, plot_file_name
+            start_pose, goal_pose, render, save_plot_to_file, plot_file_name
         )
 
     def _plan_path(
         self,
         start_pose: Tuple[float, float, float],
         goal_pose: Tuple[float, float, float],
-    ) -> Tuple[Optional[List[Tuple[int, int]]], int]:
+    ) -> Tuple[Optional[List[Tuple[float, float, float]]], int]:
         """
         Plan a path from start to goal using rrt star algorithm for wheeled vehicle.
 
@@ -93,6 +93,9 @@ class RrtStarSmoothUnicyclePlanner(RrtUnicyclePlanner):
             - For each near node:
                 - Get path and pose_stopover from the near node to the new node which connects the nodes with two smooth arcs.
                 - If no collision and the cost is smaller than the previous cost, update the parent node.
+
+        Returns
+        -
         """
         path_planning_start_time = time.time()
         # Initialize the tree with the start node
