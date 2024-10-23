@@ -110,7 +110,9 @@ class PathPlanner:
         self, min_dist: float = 1.0
     ) -> Tuple[Tuple[float, float, float], Tuple[float, float, float]]:
         """
-        Sample start and goal poses
+        Sample start and goal poses.
+        Poses are sampled in collision free region considering the padding distance.
+        Yaw is sampled from (-pi, pi].
         """
         if min_dist >= np.linalg.norm(
             [self._x_max - self._x_min, self._y_max - self._y_min]
@@ -120,10 +122,12 @@ class PathPlanner:
             )
 
         while True:
-            start_pose = self._sample_random_collision_free_pos()
-            goal_pose = self._sample_random_collision_free_pos()
-            if MathUtils.calculate_dist(start_pose[:2], goal_pose[:2]) >= min_dist:
+            start_pos = self._sample_random_collision_free_pos()
+            goal_pos = self._sample_random_collision_free_pos()
+            if MathUtils.calculate_dist(start_pos[:2], goal_pos[:2]) >= min_dist:
                 break
+        start_pose = (*start_pos, -np.random.uniform(-np.pi, np.pi))
+        goal_pose = (*goal_pos, -np.random.uniform(-np.pi, np.pi))
         return start_pose, goal_pose
 
     def _plan_path(
