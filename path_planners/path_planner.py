@@ -94,6 +94,10 @@ class PathPlanner:
         if path is not None and self._interpolate_path:
             path = self._interpolate_poses_on_path(path)
 
+        success = path is not None
+        if path is None:
+            path = []
+
         if render:
             PlotUtils.plot_global_path(
                 self._occupancy_map,
@@ -114,10 +118,6 @@ class PathPlanner:
                 path,
                 plot_file_name,
             )
-
-        success = path is not None
-        if path is None:
-            path = []
 
         return success, path, num_nodes_sampled
 
