@@ -83,6 +83,14 @@ def pos_to_grid_cell_idx(
     return gridmap_idx_i, gridmap_idx_j
 
 
+def grid_cell_idx_to_pos(
+    cell: Tuple[int, int], resolution: float, origin: Tuple[float, float]
+) -> Tuple[float, float]:
+    pos_x = origin[0] + cell[1] * resolution + 0.5 * resolution
+    pos_y = origin[1] + cell[0] * resolution + 0.5 * resolution
+    return pos_x, pos_y
+
+
 # check if pos is inside the occupancy map
 def check_if_pos_inside_map(
     x_min: float,
@@ -115,6 +123,21 @@ def check_if_pos_is_free(
     """
     idx_i, idx_j = pos_to_grid_cell_idx(pos, resolution, origin)
     if occupancy_map[idx_i, idx_j] == 0:
+        return True
+    return False
+
+
+def check_if_cell_is_free(occupancy_map: np.ndarray, cell: Tuple[int, int]) -> bool:
+    """
+    Check if the given cell is free in the occupancy map.
+    """
+    # Check if the cell is inside the map
+    if cell[0] < 0 or cell[0] >= occupancy_map.shape[0]:
+        return False
+    if cell[1] < 0 or cell[1] >= occupancy_map.shape[1]:
+        return False
+
+    if occupancy_map[cell[0], cell[1]] == 0:
         return True
     return False
 
@@ -194,3 +217,129 @@ def get_padded_occupancy_map(occupancy_map, distance, resolution):
     padded_occupancy_map[distance_map <= radius_cells] = 100
 
     return padded_occupancy_map
+
+
+def line_of_sight(
+    cell_i: Tuple[int, int], cell_f: Tuple[int, int], occupancy_map: np.ndarray
+):
+    """
+    Supercovor implementation of Bresenham's line algorithm.
+    Ref: http://eugen.dedu.free.fr/projects/bresenham/
+    """
+    if not check_if_cell_is_free(occupancy_map, cell_i) or not check_if_cell_is_free(
+        occupancy_map, cell_f
+    ):
+        return False
+
+    x = cell_i[0]
+    y = cell_i[1]
+
+    d_x = cell_f[0] - cell_i[0]
+    d_y = cell_f[1] - cell_i[1]
+
+    x_step = 1
+    y_step = 1
+
+    if d_y < 0:
+        d_y = -d_y
+        y_step = -1
+
+    if d_x < 0:
+        d_x = -d_x
+        x_step = -1
+
+    dd_y = 2 * d_y
+    dd_x = 2 * d_x
+    if dd_x >= dd_y:
+        error_prev = d_x
+        error = d_x
+
+        for i in range(d_x):
+            x += x_step
+            error += dd_y
+            if error > dd_x:
+                y += y_step
+                error -= dd_x
+
+                if error + error_prev < dd_x:
+                    if not check_if_cell_is_free(occupancy_map, (x, y - y_step)):
+                        return False
+                elif error + error_prev > dd_x:
+                    if not check_if_cell_is_free(occupancy_map, (x - x_step, y)):
+                        return False
+                else:
+                    if not check_if_cell_is_free(
+                        occupancy_map, (x, y - y_step)
+                    ) or not check_if_cell_is_free(occupancy_map, (x - x_step, y)):
+                        return False
+            if not check_if_cell_is_free(occupancy_map, (x, y)):
+                return False
+            error_prev = error
+    else:
+        error_prev = d_y
+        error = d_y
+
+        for i in range(d_y):
+            y += y_step
+            error += dd_x
+            if error > dd_y:
+                x += x_step
+                error -= dd_y
+
+                if error + error_prev < dd_y:
+                    if not check_if_cell_is_free(occupancy_map, (x - x_step, y)):
+                        return False
+                elif error + error_prev > dd_y:
+                    if not check_if_cell_is_free(occupancy_map, (x, y - y_step)):
+                        return False
+                else:
+                    if not check_if_cell_is_free(
+                        occupancy_map, (x - x_step, y)
+                    ) or not check_if_cell_is_free(occupancy_map, (x, y - y_step)):
+                        return False
+            if not check_if_cell_is_free(occupancy_map, (x, y)):
+                return False
+            error_prev = error
+    assert y == cell_f[1] and x == cell_f[0]
+    return True
+
+
+def bresenham_line_algorithm(
+    cell_i: Tuple[int, int],
+    cell_f: Tuple[int, int],
+    occupancy_map: np.ndarray,
+):
+    x_0 = cell_i[0]
+    y_0 = cell_i[1]
+    x_1 = cell_f[0]
+    y_1 = cell_f[1]
+
+    d_x = abs(x_1 - x_0)
+    d_y = -abs(y_1 - y_0)
+
+    s_x = -1
+    s_y = -1
+
+    if x_0 < x_1:
+        s_x = 1
+    if y_0 < y_1:
+        s_y = 1
+    e = d_x + d_y
+
+    while True:
+        if not check_if_cell_is_free(occupancy_map, (x_0, y_0)):
+            return False
+        if (x_0, y_0) == cell_f:
+            print(f"{(x_0, y_0)} == {cell_f}")
+            return True
+        e_2 = 2 * e
+        if e_2 >= d_y:
+            if x_0 == x_1:
+                return True
+            e += d_y
+            x_0 += s_x
+        if e_2 <= d_x:
+            if y_0 == y_1:
+                return True
+            e += d_x
+            y_0 += s_y
