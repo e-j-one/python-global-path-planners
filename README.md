@@ -1,4 +1,4 @@
-# [WIP] Python Global Path Planners
+# [WIP] Python 2D Global Path Planners
 
 ## Implemented Algorithms
 
@@ -37,10 +37,20 @@ For unicycle robot.
     - If the pose connecting two arc (the intersection pose) is within dist_near from both poses, they can be rewired.
     - If rewired, the pose connecting two arcs is also added as a node.
 
-#### Difference from RRT*-Unicycle (Yokoyama, 2023)
+#### Difference from [RRT*-unicycle](https://github.com/naokiyokoyama/rrt_star) (Yokoyama, 2023)
 - Robot does not pivot.
 - In rewiring step, dubins path is used. 
     TODO: add graceful control (park, 2011)
+
+
+### [Theta*](https://arxiv.org/abs/1401.3843)
+Implementation of Theta* algorithm.
+LineOfSight function is implemented using supercover [Bresenham-based supercover line algorithm](http://eugen.dedu.free.fr/projects/bresenham/).
+
+<p align="center">
+<img width="40%"  align="center" src="docs/figures/theta_star_path.png"  alt="fig3"/>
+<figcaption align="center">Fig. 3: Theta* path.</figcaption>
+</p>
 
 ## How to run tests.
 ```bash
@@ -50,4 +60,6 @@ bash run_tests.sh
 # TODO
 Rename check_unicycle_reachability -> check_unicycle_pos_reachability
 # References
-[RRT*-unicycle](https://github.com/naokiyokoyama/rrt_star)
+1. [N. Yokoyama, S. Ha, and D. Batra, “Success weighted by completion time: A dynamics-aware evaluation criteria for embodied navigation,” in IROS, 2021.](https://arxiv.org/abs/2103.08022)
+2. [K. Daniel, A. Nash, S. Koenig, and A. Felner, “Theta*: Any-angle path planning on grids,” Journal of Artificial Intelligence Research, vol. 39, pp. 533–579, 2010.](https://arxiv.org/abs/1401.3843)
+3. [D. Eugen, "Bresenham-based supercover line algorithm", http://eugen.dedu.free.fr/projects/bresenham/, 2001](http://eugen.dedu.free.fr/projects/bresenham/)

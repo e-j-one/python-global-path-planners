@@ -9,11 +9,15 @@ from path_planners.utils.gridmap_utils import (
     load_occupancy_map,
     load_occupancy_map_by_config_path,
     pos_to_grid_cell_idx,
+    grid_cell_idx_to_pos,
     check_if_pos_inside_map,
     check_if_pos_is_free,
+    check_if_cell_is_free,
     check_path_segments_are_not_larger_than_threshold,
     check_collision_for_path,
     get_padded_occupancy_map,
+    line_of_sight,
+    bresenham_line_algorithm,
 )
 
 
@@ -116,6 +120,16 @@ def test_load_occupancy_map_by_config_path():
 
 def test_pos_to_grid_cell_idx():
     # Arrange
+    resolution = 0.5
+    origin = [0.0, 0.0, 0.0]
+
+    # Act and Assert
+    assert pos_to_grid_cell_idx((0.5, 0.5), resolution, origin) == (1, 1)
+    assert pos_to_grid_cell_idx((0.9, 0.9), resolution, origin) == (1, 1)
+
+    assert pos_to_grid_cell_idx((0.4, 0.4), resolution, origin) == (0, 0)
+
+    # Arrange
     resolution = 1.0
     origin = [-0.5, -0.5, 0.0]
 
@@ -144,6 +158,32 @@ def test_pos_to_grid_cell_idx():
 
     assert pos_to_grid_cell_idx((9.5, -0.5), resolution, origin) == (0, 0)
     assert pos_to_grid_cell_idx((12.5 - 1e-6, 3.5 - 1e-6), resolution, origin) == (3, 2)
+
+
+def test_grid_cell_idx_to_pos():
+    # Arrange
+    resolution = 0.5
+    origin = [0.0, 0.0, 0.0]
+
+    # Act and Assert
+    assert grid_cell_idx_to_pos((0, 0), resolution, origin) == (0.25, 0.25)
+    assert grid_cell_idx_to_pos((1, 0), resolution, origin) == (0.25, 0.75)
+
+    # Arrange
+    resolution = 1.0
+    origin = [-0.5, -0.5, 0.0]
+
+    # Act and Assert
+    assert grid_cell_idx_to_pos((0, 0), resolution, origin) == (0.0, 0.0)
+    assert grid_cell_idx_to_pos((1, 0), resolution, origin) == (0.0, 1.0)
+
+    # Arrange
+    resolution = 1.0
+    origin = [9.5, -0.5, 0.0]
+
+    # Act and Assert
+    assert grid_cell_idx_to_pos((0.0, 0.0), resolution, origin) == (10, 0)
+    assert grid_cell_idx_to_pos((0.0, 1.0), resolution, origin) == (11, 0)
 
 
 def test_check_if_pos_inside_map():
@@ -215,6 +255,49 @@ def test_check_if_pos_is_free():
         assert (
             check_if_pos_is_free(occupancy_map, resolution, origin, target_pos) == False
         )
+
+
+def test_check_if_cell_is_free():
+    # Arrange
+    occupancy_map = np.array(
+        [
+            [0.0, 100.0, 0.0],
+            [0.0, 100.0, 0.0],
+            [0.0, 100.0, 0.0],
+            [0.0, 0.0, 0.0],
+        ]
+    )
+    free_cells = [
+        (0, 0),
+        (0, 2),
+        (1, 0),
+        (1, 2),
+        (2, 0),
+        (2, 2),
+        (3, 0),
+        (3, 1),
+        (3, 2),
+    ]
+    occupied_cells = [
+        (0, 1),
+        (1, 1),
+        (2, 1),
+    ]
+
+    out_of_bound_cells = [
+        (-1, 0),
+        (0, -1),
+        (4, 0),
+        (0, 3),
+    ]
+
+    # Act and Assert
+    for target_cell in free_cells:
+        assert check_if_cell_is_free(occupancy_map, target_cell) == True
+    for target_cell in occupied_cells:
+        assert check_if_cell_is_free(occupancy_map, target_cell) == False
+    for target_cell in out_of_bound_cells:
+        assert check_if_cell_is_free(occupancy_map, target_cell) == False
 
 
 def test_check_path_segments_are_not_larger_than_threshold():
@@ -398,4 +481,101 @@ def test_get_padded_occupancy_map():
     )
     assert np.array_equal(
         answer_padded_occupancy_map_0d3, label_padded_occupancy_map_0d3
+    )
+
+
+def test_line_of_sight():
+    # Arrange
+    occupancy_map = np.array(
+        [
+            [0.0, 100.0, 0.0],
+            [0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0],
+        ]
+    )
+
+    visible_paths = [
+        ((0, 0), (1, 0)),
+        ((0, 0), (2, 0)),
+        ((0, 0), (2, 1)),
+        ((1, 2), (0, 2)),
+        ((1, 2), (1, 0)),
+        ((1, 2), (1, 1)),
+        ((1, 2), (2, 0)),
+        ((1, 2), (2, 1)),
+        ((1, 2), (2, 2)),
+    ]
+    invisible_paths = [
+        ((0, 0), (0, 2)),
+        ((0, 0), (1, 1)),
+        ((0, 0), (1, 2)),
+        ((0, 0), (2, 2)),
+        ((1, 2), (0, 0)),
+    ]
+
+    # Act and Assert
+    for target_path in visible_paths:
+        assert line_of_sight(target_path[0], target_path[1], occupancy_map) == True
+    for target_path in invisible_paths:
+        assert line_of_sight(target_path[0], target_path[1], occupancy_map) == False
+
+    # Arrange
+    occupancy_map = np.array(
+        [
+            [0.0, 100.0, 100.0],
+            [100.0, 0.0, 100.0],
+            [100.0, 100.0, 0.0],
+        ]
+    )
+    # Act and Assert
+    assert line_of_sight((0, 0), (2, 2), occupancy_map) == False
+    assert line_of_sight((2, 2), (0, 0), occupancy_map) == False
+
+    # Arrange
+    occupancy_map = np.array(
+        [
+            [0.0, 100.0, 100.0],
+            [100.0, 0.0, 0.0],
+        ]
+    )
+    # Act and Assert
+    assert line_of_sight((0, 0), (1, 2), occupancy_map) == False
+    assert line_of_sight((1, 2), (0, 0), occupancy_map) == False
+
+    # Arrange
+    occupancy_map = np.array(
+        [
+            [0.0, 0.0, 100.0],
+            [100.0, 0.0, 0.0],
+        ]
+    )
+    # Act and Assert
+    assert line_of_sight((0, 0), (1, 2), occupancy_map) == True
+    assert line_of_sight((1, 2), (0, 0), occupancy_map) == True
+
+
+def test_bresenham_line_algorithm():
+    # Arrange
+    occupancy_map = np.array(
+        [
+            [0.0, 100.0, 100.0],
+            [100.0, 0.0, 100.0],
+            [100.0, 100.0, 0.0],
+        ]
+    )
+    # Act and Assert
+    assert bresenham_line_algorithm((0, 0), (2, 2), occupancy_map) == True
+    assert bresenham_line_algorithm((2, 2), (0, 0), occupancy_map) == True
+
+    # Arrange
+    occupancy_map = np.array(
+        [
+            [0.0, 100.0, 100.0],
+            [100.0, 0.0, 0.0],
+        ]
+    )
+    # Act and Assert
+    assert (
+        bresenham_line_algorithm((0, 0), (1, 2), occupancy_map) == True
+        or bresenham_line_algorithm((1, 2), (0, 0), occupancy_map) == True
     )
