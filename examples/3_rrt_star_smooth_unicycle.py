@@ -62,7 +62,7 @@ if __name__ == "__main__":
     )
 
     success, path, num_nodes_sampled = rrt_unicycle_path_planner.plan_global_path(
-        start_pose, goal_pose, render=False, save_plot_to_file=True
+        start_pose, goal_pose, render=True, save_plot_to_file=True
     )
 
     print("Number of nodes sampled:", num_nodes_sampled)
@@ -89,6 +89,11 @@ if __name__ == "__main__":
         f"results/rrt_star_smooth_unicycle_{map_name}_{curr_date_time_str}.csv"
     )
     path = np.array(path)
+
+    # if directory does not exist, create it
+    if not os.path.exists("results"):
+        os.makedirs("results")
+
     np.savetxt(path_file_name, path, delimiter=",")
 
     # save start, goal and config to file
