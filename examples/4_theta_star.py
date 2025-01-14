@@ -26,7 +26,7 @@ if __name__ == "__main__":
     print("occupancy_map.shape", occupancy_map.shape)
     # plot_occupancy_grid(occupancy_map, occupancy_map_resolution, occupancy_map_origin)
 
-    config = {"occupancy_map_obstacle_padding_dist": 0.0}
+    config = {"occupancy_map_obstacle_padding_dist": 0.0, "print_log": True}
 
     # start_pose = (1.0, 1.0, 0.0)
     # goal_pose = (4.0, 0.0, 0.0)

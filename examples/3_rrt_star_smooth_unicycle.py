@@ -40,6 +40,7 @@ if __name__ == "__main__":
         "linear_velocity": 1.0,
         "max_angular_velocity": 2.0,
         "near_node_dist_threshold": 1.0,
+        "print_log": True,
     }
 
     # start_pose = (0.0, 0.0, 0.0)
@@ -73,16 +74,6 @@ if __name__ == "__main__":
     print("Path found!")
     print("Path length:", len(path))
 
-    print("Start pose:", start_pose)
-    print("Goal pose:", goal_pose)
-    print("Path:", path)
-
-    # print distance between points
-    path = np.array(path)
-    for i in range(1, len(path)):
-        distance = np.linalg.norm(path[i][:2] - path[i - 1][:2])
-        print(f"Distance between {path[i]} and {path[i-1]}: {distance}")
-
     # save path to file
     curr_date_time_str = datetime.now().strftime("%Y%m%d_%H%M%S")
     path_file_name = (
@@ -95,6 +86,7 @@ if __name__ == "__main__":
         os.makedirs("results")
 
     np.savetxt(path_file_name, path, delimiter=",")
+    print(f"Path saved to {path_file_name}")
 
     # save start, goal and config to file
     config_file_name = (

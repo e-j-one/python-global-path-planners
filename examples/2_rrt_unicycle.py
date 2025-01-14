@@ -36,6 +36,7 @@ if __name__ == "__main__":
         "max_drive_dist": 0.5,
         "linear_velocity": 1.0,
         "max_angular_velocity": 4.0,
+        "print_log": True,
     }
 
     # start_pose = (0.0, 0.0, 0.0)

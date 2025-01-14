@@ -28,6 +28,7 @@ class RrtUnicyclePlanner(PathPlanner):
         occupancy_map_obstacle_padding_dist: float = 0.5,
         interpolate_path: bool = False,
         d_s: float = 0.25,
+        print_log: bool = False,
         goal_sample_rate: float = 0.2,
         max_iter: int = 10000,
         max_drive_dist: float = 0.5,
@@ -42,6 +43,7 @@ class RrtUnicyclePlanner(PathPlanner):
             occupancy_map_obstacle_padding_dist,
             interpolate_path,
             d_s,
+            print_log,
         )
         self._goal_sample_rate = goal_sample_rate
         self._max_iter = max_iter
@@ -153,21 +155,24 @@ class RrtUnicyclePlanner(PathPlanner):
             # Check if the goal is reached
             if self._check_goal_reachable(new_node_pos, goal_pose):
                 if not path_found:
-                    print("Goal is reached !!! sample_iter: ", sample_iter)
-                path_found = True
+                    if self._print_log:
+                        print("Goal is reached !!! sample_iter: ", sample_iter)
+                    path_found = True
                 if not self._tree.check_if_pose_in_tree(goal_pose):
                     self._tree.add_node(goal_pose, new_node_idx)
                 if self._terminate_on_goal_reached:
                     break
 
         path_planning_end_time = time.time()
-        print(
-            f"Path planning time: {path_planning_end_time - path_planning_start_time:.2f} sec"
-        )
+        if self._print_log:
+            print(
+                f"Path planning time: {path_planning_end_time - path_planning_start_time:.2f} sec"
+            )
         self._plot_tree_with_edge_paths(start_pose, goal_pose, edge_paths)
 
         if path_found:
-            print("Path found")
+            if self._print_log:
+                print("Path found")
             self._path = self._tree.get_path_from_tree(goal_pose)
             # interpolated_unicycle_path = KinematicUtils.interpolate_path_using_arc(
             #     self._path, d_s=self._occupancy_map_resolution
@@ -175,7 +180,8 @@ class RrtUnicyclePlanner(PathPlanner):
             # self._path = interpolated_unicycle_path
             return self._path, sample_iter
         else:
-            print("Max iteration reached !!!")
+            if self._print_log:
+                print("Max iteration reached !!!")
             return None, sample_iter
 
     def _check_goal_reachable(

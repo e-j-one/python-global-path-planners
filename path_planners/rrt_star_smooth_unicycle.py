@@ -35,6 +35,7 @@ class RrtStarSmoothUnicyclePlanner(RrtUnicyclePlanner):
         max_angular_velocity: float = 1.0,
         render_tree_during_planning: bool = False,
         near_node_dist_threshold: float = 0.5,
+        print_log: bool = False,
     ):
         super().__init__(
             terminate_on_goal_reached,
@@ -43,6 +44,7 @@ class RrtStarSmoothUnicyclePlanner(RrtUnicyclePlanner):
             occupancy_map_obstacle_padding_dist,
             interpolate_path,
             d_s,
+            print_log,
             goal_sample_rate,
             max_iter,
             max_drive_dist,
@@ -146,8 +148,9 @@ class RrtStarSmoothUnicyclePlanner(RrtUnicyclePlanner):
             # Check if the goal is reached
             if self._check_goal_reachable(new_node_pos, goal_pose):
                 if not path_found:
-                    print("Goal is reached !!! sample_iter: ", sample_iter)
-                path_found = True
+                    if self._print_log:
+                        print("Goal is reached !!! sample_iter: ", sample_iter)
+                    path_found = True
                 if not self._tree.check_if_pose_in_tree(goal_pose):
                     new_node_cost = self._tree.get_cost_of_node_idx(new_node_idx)
                     cost_to_goal = self._get_cost_of_path([new_node_pos, goal_pose])
@@ -161,15 +164,17 @@ class RrtStarSmoothUnicyclePlanner(RrtUnicyclePlanner):
                     break
 
         path_planning_end_time = time.time()
-        print(
-            f"Path planning time: {path_planning_end_time - path_planning_start_time:.2f} sec"
-        )
+        if self._print_log:
+            print(
+                f"Path planning time: {path_planning_end_time - path_planning_start_time:.2f} sec"
+            )
 
         if self._render_tree_during_planning:
             self._plot_tree(start_pose, goal_pose)
 
         if path_found:
-            print("Path found")
+            if self._print_log:
+                print("Path found")
             self._path = self._tree.get_path_from_tree(goal_pose)
             # interpolated_unicycle_path = KinematicUtils.interpolate_path_using_arc(
             #     self._path, self._occupancy_map_resolution
@@ -177,7 +182,8 @@ class RrtStarSmoothUnicyclePlanner(RrtUnicyclePlanner):
             # self._path = interpolated_unicycle_path
             return self._path, sample_iter
         else:
-            print("Max iteration reached !!!")
+            if self._print_log:
+                print("Max iteration reached !!!")
             return None, sample_iter
 
     def _check_goal_reachable(

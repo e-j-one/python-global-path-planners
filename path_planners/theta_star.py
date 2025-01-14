@@ -22,6 +22,7 @@ class ThetaStarPlanner(PathPlanner):
         occupancy_map_obstacle_padding_dist: float = 0.5,
         interpolate_path: bool = False,
         d_s: float = 0.25,
+        print_log: bool = False,
     ):
         super().__init__(
             terminate_on_goal_reached,
@@ -30,6 +31,7 @@ class ThetaStarPlanner(PathPlanner):
             occupancy_map_obstacle_padding_dist,
             interpolate_path,
             d_s,
+            print_log,
         )
 
     def set_occupancy_map(self, occupancy_map, resolution, origin):
@@ -78,10 +80,10 @@ class ThetaStarPlanner(PathPlanner):
 
         # Check if the start and goal cells are valid
         if not GridmapUtils.check_if_cell_is_free(self._occupancy_map, start_cell):
-            print("Start cell is not free!")
+            Warning("Start cell is not free!")
             return None, num_nodes_sampled
         if not GridmapUtils.check_if_cell_is_free(self._occupancy_map, goal_cell):
-            print("Goal cell is not free!")
+            Warning("Goal cell is not free!")
             return None, num_nodes_sampled
 
         self._g_score = {start_cell: 0}  # g_score[cell] = cost to reach cell
@@ -102,15 +104,17 @@ class ThetaStarPlanner(PathPlanner):
             i += 1
 
             if current_cell == goal_cell:
-                print("Goal is reached!!!")
+                if self._print_log:
+                    print("Goal is reached!!!")
 
                 cell_path = self._reconstruct_path(self._parent, current_cell)
                 path = self._get_pose_path_from_cell_path(cell_path)
 
                 path_planning_end_time = time.time()
-                print(
-                    f"Path planning time: {path_planning_end_time - path_planning_start_time:.2f} sec"
-                )
+                if self._print_log:
+                    print(
+                        f"Path planning time: {path_planning_end_time - path_planning_start_time:.2f} sec"
+                    )
                 return path, num_nodes_sampled
 
             closed_set.add(current_cell)
@@ -123,15 +127,16 @@ class ThetaStarPlanner(PathPlanner):
                     self._parent[neighbor] = None
                 self._update_vertex(current_cell, neighbor)
 
-            if len(closed_set) % 1000 == 0:
+            if self._print_log and len(closed_set) % 1000 == 0:
                 print(
                     f"len(closed_set): {len(closed_set)}, len(open_set): {len(self._open_set)}"
                 )
 
         path_planning_end_time = time.time()
-        print(
-            f"Path planning time: {path_planning_end_time - path_planning_start_time:.2f} sec"
-        )
+        if self._print_log:
+            print(
+                f"Path planning time: {path_planning_end_time - path_planning_start_time:.2f} sec"
+            )
 
         return path, num_nodes_sampled
 
