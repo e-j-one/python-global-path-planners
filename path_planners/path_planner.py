@@ -17,6 +17,7 @@ class PathPlanner:
         occupancy_map_obstacle_padding_dist: float = 0.5,
         interpolate_path: bool = False,
         d_s: float = 0.25,
+        print_log: bool = False,
     ):
         self._terminate_on_goal_reached = terminate_on_goal_reached
         self._goal_reach_dist_threshold = goal_reach_dist_threshold
@@ -24,6 +25,7 @@ class PathPlanner:
         self._occupancy_map_obstacle_padding_dist = occupancy_map_obstacle_padding_dist
         self._interpolate_path = interpolate_path
         self._d_s = d_s
+        self._print_log = print_log
 
         self._occupancy_map = None
         self._occupancy_map_resolution = None
@@ -95,7 +97,7 @@ class PathPlanner:
             if self._interpolate_path:
                 path = self._interpolate_poses_on_path(path)
             if self._check_collision(path):
-                print(f"Path is in collision! path: {path}")
+                Warning(f"Path is in collision! path: {path}")
                 path = None
 
         success = path is not None
