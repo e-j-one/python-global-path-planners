@@ -97,7 +97,9 @@ class RrtStarSmoothUnicyclePlanner(RrtUnicyclePlanner):
                 - If no collision and the cost is smaller than the previous cost, update the parent node.
 
         Returns
-        -
+        -------
+        path : Optional[List[Tuple[float, float, float]]]
+            The planned path. None if the path is not found.
         """
         path_planning_start_time = time.time()
         # Initialize the tree with the start node

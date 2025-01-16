@@ -64,7 +64,6 @@ class ThetaStarPlanner(PathPlanner):
             -1 if the path planner is not sampling based.
         """
 
-        path = []
         num_nodes_sampled = -1  # since this is not a sampling based planner
 
         path_planning_start_time = time.time()
@@ -134,11 +133,12 @@ class ThetaStarPlanner(PathPlanner):
 
         path_planning_end_time = time.time()
         if self._print_log:
+            print("Goal is not reachable!")
             print(
                 f"Path planning time: {path_planning_end_time - path_planning_start_time:.2f} sec"
             )
 
-        return path, num_nodes_sampled
+        return None, num_nodes_sampled
 
     def _update_vertex(self, current_cell: Tuple[int, int], neighbor: Tuple[int, int]):
         parent_candid = current_cell
