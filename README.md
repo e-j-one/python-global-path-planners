@@ -14,7 +14,7 @@ Until goal is reached or max_iter is reached:
 
 NOTE: When connectin $p_\text{new}$ to the existing node, agent does not perform self pivot to reduce path completion time.
 
-### RRT*
+### RRT* Smooth Unicycle
 For unicycle robot.
 
 <p align="center">
@@ -38,6 +38,11 @@ For unicycle robot.
     - To check if two pose can be connected, try connecting poses only using the two arc.
     - If the pose connecting two arc (the intersection pose) is within dist_near from both poses, they can be rewired.
     - If rewired, the pose connecting two arcs is also added as a node.
+
+### RRT* Smooth Unicycle +
+
+1. Try in-place pivot only in the start node.
+2. When finding near nodes, nodes added in the rewiring steps are ignored.
 
 #### Difference from [RRT*-unicycle](https://github.com/naokiyokoyama/rrt_star) (Yokoyama, 2023)
 - Robot does not pivot.
