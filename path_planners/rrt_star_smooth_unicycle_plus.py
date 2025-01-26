@@ -53,10 +53,6 @@ class RrtStarSmoothUnicyclePlusPlanner(RrtStarSmoothUnicyclePlanner):
             print_log,
         )
 
-        self._tree = RrtStarSmoothUnicyclePlusTree(
-            near_node_dist_threshold=near_node_dist_threshold
-        )
-
     def set_occupancy_map(self, occupancy_map, resolution, origin):
         return super().set_occupancy_map(occupancy_map, resolution, origin)
 
@@ -81,8 +77,9 @@ class RrtStarSmoothUnicyclePlusPlanner(RrtStarSmoothUnicyclePlanner):
         Parents of the pivot nodes are the other pivot nodes that are closer to the root node.
         """
         # rotate clockwise
+        step = self._max_angular_velocity * self._d_s
         last_added_node_idx = 0
-        for angle in np.arange(0, np.pi, self._max_angular_velocity * self._d_s):
+        for angle in np.arange(step, np.pi, step):
             pivot_node_pose = (start_pose[0], start_pose[1], start_pose[2] + angle)
 
             cost = angle / self._max_angular_velocity
@@ -94,7 +91,7 @@ class RrtStarSmoothUnicyclePlusPlanner(RrtStarSmoothUnicyclePlanner):
 
         # rotate counter-clockwise
         last_added_node_idx = 0
-        for angle in np.arange(0, -np.pi, -self._max_angular_velocity * self._d_s):
+        for angle in np.arange(-step, -np.pi, -step):
             pivot_node_pose = (start_pose[0], start_pose[1], start_pose[2] + angle)
 
             cost = -angle / self._max_angular_velocity
