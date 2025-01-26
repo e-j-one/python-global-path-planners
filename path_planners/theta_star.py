@@ -22,6 +22,7 @@ class ThetaStarPlanner(PathPlanner):
         occupancy_map_obstacle_padding_dist: float = 0.5,
         interpolate_path: bool = False,
         d_s: float = 0.25,
+        collision_check_ratio_to_map_res: float = 0.8,
         print_log: bool = False,
     ):
         super().__init__(
@@ -31,6 +32,7 @@ class ThetaStarPlanner(PathPlanner):
             occupancy_map_obstacle_padding_dist,
             interpolate_path,
             d_s,
+            collision_check_ratio_to_map_res,
             print_log,
         )
 
