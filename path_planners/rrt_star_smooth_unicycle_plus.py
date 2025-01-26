@@ -70,6 +70,40 @@ class RrtStarSmoothUnicyclePlusPlanner(RrtStarSmoothUnicyclePlanner):
             start_pose, goal_pose, render, save_plot_to_file, plot_file_name
         )
 
+    def _add_pivot_nodes_in_start_pos(self, start_pose: Tuple[float, float, float]):
+        """
+        Add pivot nodes in the start position.
+        Pivot nodes are in the start position with different orientations.
+        Orientatin diff is max_angular_velocity * d_t.
+
+        Parents of the pivot nodes are the other pivot nodes that are closer to the root node.
+        """
+        # 0 to pi
+        last_added_node_idx = 0
+        for angle in np.arange(0, np.pi, self._max_angular_velocity * self._d_s):
+            pivot_node_pose = (start_pose[0], start_pose[1], angle)
+
+            cost = angle / self._max_angular_velocity
+            cost_from_parent = self._d_s
+
+            last_added_node_idx = self._tree.add_node(
+                pivot_node_pose, last_added_node_idx, cost, cost_from_parent
+            )
+
+        # 0 to -pi
+        last_added_node_idx = 0
+        for angle in np.arange(0, -np.pi, -self._max_angular_velocity * self._d_s):
+            pivot_node_pose = (start_pose[0], start_pose[1], angle)
+
+            cost = -angle / self._max_angular_velocity
+            cost_from_parent = self._d_s
+
+            last_added_node_idx = self._tree.add_node(
+                pivot_node_pose, last_added_node_idx, cost, cost_from_parent
+            )
+
+        return
+
     def _plan_path(
         self,
         start_pose: Tuple[float, float, float],
@@ -78,6 +112,7 @@ class RrtStarSmoothUnicyclePlusPlanner(RrtStarSmoothUnicyclePlanner):
         """
         Plan a path from start to goal using rrt star algorithm for wheeled vehicle.
 
+        0. Initialize the tree with the start node and add pivot nodes in the start position
         Until goal is reached or max_iter is reached:
         1. Sample a random point
         2. Find the nearest node (by position) in the tree to the random point
@@ -105,6 +140,8 @@ class RrtStarSmoothUnicyclePlusPlanner(RrtStarSmoothUnicyclePlanner):
         # Initialize the tree with the start node
         self._tree.reset_tree()
         self._tree.add_root(start_pose)
+
+        self._add_pivot_nodes_in_start_pos(start_pose)
 
         path_found = False
 
