@@ -28,6 +28,7 @@ class RrtStarSmoothUnicyclePlanner(RrtUnicyclePlanner):
         occupancy_map_obstacle_padding_dist: float = 0.5,
         interpolate_path: bool = False,
         d_s: float = 0.25,
+        collision_check_ratio_to_map_res: float = 0.8,
         goal_sample_rate: float = 0.2,
         max_iter: int = 10000,
         max_drive_dist: float = 0.5,
@@ -44,6 +45,7 @@ class RrtStarSmoothUnicyclePlanner(RrtUnicyclePlanner):
             occupancy_map_obstacle_padding_dist,
             interpolate_path,
             d_s,
+            collision_check_ratio_to_map_res,
             print_log,
             goal_sample_rate,
             max_iter,
@@ -226,7 +228,8 @@ class RrtStarSmoothUnicyclePlanner(RrtUnicyclePlanner):
             path_to_new_node = KinematicUtils.get_unicycle_path(
                 near_node_pose,
                 new_node_pos,
-                d_s=self._occupancy_map_resolution,
+                d_s=self._occupancy_map_resolution
+                * self._collision_check_ratio_to_map_res,
             )
 
             if self._check_collision(path_to_new_node):
@@ -276,11 +279,17 @@ class RrtStarSmoothUnicyclePlanner(RrtUnicyclePlanner):
                 continue
 
             path_from_new_node_to_stopover = KinematicUtils.get_unicycle_path(
-                new_node_pose, pose_stopover, d_s=self._occupancy_map_resolution
+                new_node_pose,
+                pose_stopover,
+                d_s=self._occupancy_map_resolution
+                * self._collision_check_ratio_to_map_res,
             )
 
             path_from_stopover_to_near_node = KinematicUtils.get_unicycle_path(
-                pose_stopover, near_node_pose, d_s=self._occupancy_map_resolution
+                pose_stopover,
+                near_node_pose,
+                d_s=self._occupancy_map_resolution
+                * self._collision_check_ratio_to_map_res,
             )
             if self._check_collision(
                 path_from_new_node_to_stopover

@@ -17,6 +17,7 @@ class PathPlanner:
         occupancy_map_obstacle_padding_dist: float = 0.5,
         interpolate_path: bool = False,
         d_s: float = 0.25,
+        collision_check_ratio_to_map_res: float = 0.8,
         print_log: bool = False,
     ):
         self._terminate_on_goal_reached = terminate_on_goal_reached
@@ -25,6 +26,7 @@ class PathPlanner:
         self._occupancy_map_obstacle_padding_dist = occupancy_map_obstacle_padding_dist
         self._interpolate_path = interpolate_path
         self._d_s = d_s
+        self._collision_check_ratio_to_map_res = collision_check_ratio_to_map_res
         self._print_log = print_log
 
         self._occupancy_map = None

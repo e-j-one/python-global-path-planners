@@ -28,6 +28,7 @@ class RrtUnicyclePlanner(PathPlanner):
         occupancy_map_obstacle_padding_dist: float = 0.5,
         interpolate_path: bool = False,
         d_s: float = 0.25,
+        collision_check_ratio_to_map_res: float = 0.8,
         print_log: bool = False,
         goal_sample_rate: float = 0.2,
         max_iter: int = 10000,
@@ -43,6 +44,7 @@ class RrtUnicyclePlanner(PathPlanner):
             occupancy_map_obstacle_padding_dist,
             interpolate_path,
             d_s,
+            collision_check_ratio_to_map_res,
             print_log,
         )
         self._goal_sample_rate = goal_sample_rate
@@ -134,7 +136,8 @@ class RrtUnicyclePlanner(PathPlanner):
             path_to_new_node = KinematicUtils.get_unicycle_path(
                 nearest_node_pose,
                 new_node_pos,
-                d_s=self._occupancy_map_resolution,  # = collision check resolution
+                d_s=self._occupancy_map_resolution
+                * self._collision_check_ratio_to_map_res,  # = collision check resolution
             )
 
             if self._check_collision(path_to_new_node):
@@ -236,7 +239,8 @@ class RrtUnicyclePlanner(PathPlanner):
                 unicycle_edge_path = KinematicUtils.get_unicycle_path(
                     parent_node.get_pose(),
                     node.get_pos(),
-                    d_s=self._occupancy_map_resolution,
+                    d_s=self._occupancy_map_resolution
+                    * self._collision_check_ratio_to_map_res,
                 )
                 edge_paths.append(unicycle_edge_path)
 
