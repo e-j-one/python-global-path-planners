@@ -78,10 +78,12 @@ class RrtStarSmoothUnicyclePlusPlanner(RrtStarSmoothUnicyclePlanner):
 
         Parents of the pivot nodes are the other pivot nodes that are closer to the root node.
         """
-        # 0 to pi
+        # rotate clockwise
         last_added_node_idx = 0
-        for angle in np.arange(0, np.pi, self._max_angular_velocity * self._d_s):
-            pivot_node_pose = (start_pose[0], start_pose[1], angle)
+        step = self._max_angular_velocity * self._d_s
+        for angle in np.arange(step, np.pi, step):
+            print("angle: ", angle)
+            pivot_node_pose = (start_pose[0], start_pose[1], start_pose[2] + angle)
 
             cost = angle / self._max_angular_velocity
             cost_from_parent = self._d_s
@@ -90,10 +92,11 @@ class RrtStarSmoothUnicyclePlusPlanner(RrtStarSmoothUnicyclePlanner):
                 pivot_node_pose, last_added_node_idx, cost, cost_from_parent
             )
 
-        # 0 to -pi
+        # rotate counter-clockwise
         last_added_node_idx = 0
-        for angle in np.arange(0, -np.pi, -self._max_angular_velocity * self._d_s):
-            pivot_node_pose = (start_pose[0], start_pose[1], angle)
+        for angle in np.arange(-step, -np.pi, -step):
+            print("angle: ", angle)
+            pivot_node_pose = (start_pose[0], start_pose[1], start_pose[2] + angle)
 
             cost = -angle / self._max_angular_velocity
             cost_from_parent = self._d_s
@@ -325,3 +328,30 @@ class RrtStarSmoothUnicyclePlusPlanner(RrtStarSmoothUnicyclePlanner):
             updated_cost_of_near_node,
             cost_from_stopover_node_to_near_node,
         )
+
+    def _interpolate_poses_on_path(
+        self, path: List[Tuple[float, float, float]]
+    ) -> List[Tuple[float, float, float]]:
+        """
+        Since RRT*SmoothUnicycle+ path includes pivot nodes in the start pose,
+        if path includes some of the pivot points,
+        add them on the path first and interpolate the rest.
+        """
+        interpolated_path = []
+
+        # Check if the path includes pivot nodes in the start pose and add them
+        start_pose = path[0]
+
+        remaining_path_start_idx = 0
+
+        for pos_idx in range(1, len(path)):
+            if not path[pos_idx][:1] == start_pose[:1]:
+                break
+            interpolated_path.append(path[pos_idx - 1])
+            remaining_path_start_idx = pos_idx
+
+        # Interpolate the rest
+        interpolated_path += KinematicUtils.interpolate_path_using_arc(
+            path[remaining_path_start_idx:], self._d_s
+        )
+        return interpolated_path
