@@ -42,7 +42,7 @@ For unicycle robot.
 ### RRT* Smooth Unicycle +
 
 1. Try in-place pivot only in the start node.
-2. When finding near nodes, nodes added in the rewiring steps are ignored.
+2. ~~When finding near nodes, nodes added in the rewiring steps are ignored.~~ :Not implemented
 
 #### Difference from [RRT*-unicycle](https://github.com/naokiyokoyama/rrt_star) (Yokoyama, 2023)
 - Robot does not pivot.

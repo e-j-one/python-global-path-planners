@@ -15,7 +15,7 @@ class RrtStarSmoothUnicyclePlusPlanner(RrtStarSmoothUnicyclePlanner):
     """
     Plan a path from start to goal using rrt star algorithm for wheeled vehicle.
     - Start pose orientation (yaw) is considered but goal pose orientation is ignored.
-    - The vehicle can only drive at a constant velocity.
+    - The vehicle can only drive at a constant velocity except for the start position.
     - Angular acceleration limits are not considered.
     """
 
