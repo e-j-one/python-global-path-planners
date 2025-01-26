@@ -12,6 +12,8 @@ Until goal is reached or max_iter is reached:
 5. Add the new node to the tree with the parent node.
     - The heading of the new node is assigned by the path from the parent node chosen for that node.
 
+NOTE: When connectin $p_\text{new}$ to the existing node, agent does not perform self pivot to reduce path completion time.
+
 ### RRT*
 For unicycle robot.
 
