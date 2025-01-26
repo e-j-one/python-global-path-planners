@@ -8,9 +8,7 @@ import path_planners.utils.kinematic_utils as KinematicUtils
 import path_planners.rrt_utils.rrt_utils as RrtUtils
 import path_planners.utils.debug_utils as DebugUtils
 
-from path_planners.rrt_unicycle import RrtUnicyclePlanner
 from path_planners.rrt_star_smooth_unicycle import RrtStarSmoothUnicyclePlanner
-from path_planners.rrt_utils.rrt_trees import RrtStarTree
 
 
 class RrtStarSmoothUnicyclePlusPlanner(RrtStarSmoothUnicyclePlanner):
@@ -55,6 +53,10 @@ class RrtStarSmoothUnicyclePlusPlanner(RrtStarSmoothUnicyclePlanner):
             print_log,
         )
 
+        self._tree = RrtStarSmoothUnicyclePlusTree(
+            near_node_dist_threshold=near_node_dist_threshold
+        )
+
     def set_occupancy_map(self, occupancy_map, resolution, origin):
         return super().set_occupancy_map(occupancy_map, resolution, origin)
 
@@ -80,9 +82,7 @@ class RrtStarSmoothUnicyclePlusPlanner(RrtStarSmoothUnicyclePlanner):
         """
         # rotate clockwise
         last_added_node_idx = 0
-        step = self._max_angular_velocity * self._d_s
-        for angle in np.arange(step, np.pi, step):
-            print("angle: ", angle)
+        for angle in np.arange(0, np.pi, self._max_angular_velocity * self._d_s):
             pivot_node_pose = (start_pose[0], start_pose[1], start_pose[2] + angle)
 
             cost = angle / self._max_angular_velocity
@@ -94,8 +94,7 @@ class RrtStarSmoothUnicyclePlusPlanner(RrtStarSmoothUnicyclePlanner):
 
         # rotate counter-clockwise
         last_added_node_idx = 0
-        for angle in np.arange(-step, -np.pi, -step):
-            print("angle: ", angle)
+        for angle in np.arange(0, -np.pi, -self._max_angular_velocity * self._d_s):
             pivot_node_pose = (start_pose[0], start_pose[1], start_pose[2] + angle)
 
             cost = -angle / self._max_angular_velocity
