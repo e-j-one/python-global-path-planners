@@ -28,6 +28,7 @@ class RrtStarSmoothUnicyclePlusPlanner(RrtStarSmoothUnicyclePlanner):
         interpolate_path: bool = False,
         d_s: float = 0.25,
         collision_check_ratio_to_map_res: float = 0.8,
+        print_log: bool = False,
         goal_sample_rate: float = 0.2,
         max_iter: int = 10000,
         max_drive_dist: float = 0.5,
@@ -35,7 +36,6 @@ class RrtStarSmoothUnicyclePlusPlanner(RrtStarSmoothUnicyclePlanner):
         max_angular_velocity: float = 1.0,
         render_tree_during_planning: bool = False,
         near_node_dist_threshold: float = 0.5,
-        print_log: bool = False,
     ):
         super().__init__(
             terminate_on_goal_reached,
@@ -45,6 +45,7 @@ class RrtStarSmoothUnicyclePlusPlanner(RrtStarSmoothUnicyclePlanner):
             interpolate_path,
             d_s,
             collision_check_ratio_to_map_res,
+            print_log,
             goal_sample_rate,
             max_iter,
             max_drive_dist,
@@ -52,11 +53,7 @@ class RrtStarSmoothUnicyclePlusPlanner(RrtStarSmoothUnicyclePlanner):
             max_angular_velocity,
             render_tree_during_planning,
             near_node_dist_threshold,
-            print_log,
         )
-
-    def set_occupancy_map(self, occupancy_map, resolution, origin):
-        return super().set_occupancy_map(occupancy_map, resolution, origin)
 
     def plan_global_path(
         self,
@@ -225,26 +222,6 @@ class RrtStarSmoothUnicyclePlusPlanner(RrtStarSmoothUnicyclePlanner):
             if self._print_log:
                 print("Max iteration reached !!!")
             return None, sample_iter
-
-    def _check_goal_reachable(
-        self,
-        new_node_pose: Tuple[float, float, float],
-        goal_pose: Tuple[float, float, float],
-    ) -> bool:
-        return super()._check_goal_reachable(new_node_pose, goal_pose)
-
-    def _sample_position(
-        self, goal_pose: Tuple[float, float, float]
-    ) -> Tuple[float, float]:
-        return super()._sample_position(goal_pose)
-
-    def _get_collision_free_near_nodes(
-        self, new_node_pos: Tuple[float, float], near_nodes_idx: List[int]
-    ) -> Tuple[List[Tuple[float, float, float]], List[int], List[float]]:
-        return super()._get_collision_free_near_nodes(new_node_pos, near_nodes_idx)
-
-    def _check_collision(self, path: List[Tuple[float, float, float]]):
-        return super()._check_collision(path)
 
     def _get_cost_of_path(self, path: List[Tuple[float, float, float]]):
         return GeometryUtils.get_path_length(path)

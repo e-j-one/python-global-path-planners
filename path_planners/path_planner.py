@@ -1,3 +1,4 @@
+import warnings
 from typing import List, Tuple, Optional
 
 import numpy as np
@@ -99,7 +100,7 @@ class PathPlanner:
             if self._interpolate_path:
                 path = self._interpolate_poses_on_path(path)
             if self._check_collision(path):
-                print(f"Path is in collision! path: {path}")
+                warnings.warn("Path is in collision!")
                 path = None
 
         success = path is not None

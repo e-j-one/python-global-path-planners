@@ -64,9 +64,6 @@ class RrtUnicyclePlanner(PathPlanner):
             raise ValueError("linear_velocity should be positive!")
         self._min_turning_radius = self._linear_velocity / self._max_angular_velocity
 
-    def set_occupancy_map(self, occupancy_map, resolution, origin):
-        return super().set_occupancy_map(occupancy_map, resolution, origin)
-
     def plan_global_path(
         self,
         start_pose: Tuple[float, float, float],
@@ -207,17 +204,6 @@ class RrtUnicyclePlanner(PathPlanner):
             return (goal_pose[0], goal_pose[1])
         else:
             return self._sample_random_pos()
-
-    def _check_collision(self, path: List[Tuple[float, float, float]]):
-        return super()._check_collision(path)
-
-    def _check_goal_reached(
-        self, new_node_pos: Tuple[float, float], goal_pos: Tuple[float, float]
-    ) -> bool:
-        return super()._check_goal_reached(new_node_pos, goal_pos)
-
-    def _sample_random_pos(self):
-        return super()._sample_random_pos()
 
     def _interpolate_poses_on_path(
         self, path: List[Tuple[float, float, float]]

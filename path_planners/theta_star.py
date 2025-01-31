@@ -36,9 +36,6 @@ class ThetaStarPlanner(PathPlanner):
             print_log,
         )
 
-    def set_occupancy_map(self, occupancy_map, resolution, origin):
-        return super().set_occupancy_map(occupancy_map, resolution, origin)
-
     def plan_global_path(
         self,
         start_pose: Tuple[float, float, float],

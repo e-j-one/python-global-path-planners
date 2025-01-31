@@ -166,11 +166,14 @@ def check_collision_for_path(
     occupancy_map: np.ndarray,
     resolution: float,
     origin: float,
-    path: List[Tuple[float, float, float]],
+    path: Optional[List[Tuple[float, float, float]]],
 ) -> bool:
     """
-    Return True if there is a collision.
+    Return True if there is a collision or path is invalid.
     """
+    if path is None or len(path) == 0:
+        warnings.warn("Path is empty. Collision check is skipped.")
+        return True
 
     if check_path_segments_are_not_larger_than_threshold(path, resolution):
         warnings.warn(
