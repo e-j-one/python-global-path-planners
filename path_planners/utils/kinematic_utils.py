@@ -1,11 +1,14 @@
 # TODO: separate files by functionality or robot type
 
+import warnings
 from typing import Tuple, Optional, List
 
 import numpy as np
 
 import path_planners.utils.geometry_utils as GeometryUtils
 import path_planners.utils.math_utils as MathUtils
+
+MAX_PATH_LENGTH = 1e6
 
 
 def check_unicycle_reachability(
@@ -369,7 +372,7 @@ def get_straingt_path(
 
 def get_unicycle_path(
     pose_i: Tuple[float, float, float], pos_f: Tuple[float, float], d_s: float
-) -> List[Tuple[float, float, float]]:
+) -> Optional[List[Tuple[float, float, float]]]:
     """
     Get the arc path from pose_i to pos_f.
     1. Calculate the radius of the arc
@@ -401,6 +404,10 @@ def get_unicycle_path(
         radius_dir_sign * (theta_goal - theta_start)
     )
     num_steps = int(theta_diff // (radius_dir_sign * d_theta))
+
+    if num_steps > MAX_PATH_LENGTH:
+        warnings.warn(f"Too many steps ({num_steps}) on the path. Returning None.")
+        return None
 
     path = [pose_i]
 
