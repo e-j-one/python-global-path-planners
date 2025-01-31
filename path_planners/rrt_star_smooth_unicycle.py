@@ -29,6 +29,7 @@ class RrtStarSmoothUnicyclePlanner(RrtUnicyclePlanner):
         interpolate_path: bool = False,
         d_s: float = 0.25,
         collision_check_ratio_to_map_res: float = 0.8,
+        print_log: bool = False,
         goal_sample_rate: float = 0.2,
         max_iter: int = 10000,
         max_drive_dist: float = 0.5,
@@ -36,7 +37,6 @@ class RrtStarSmoothUnicyclePlanner(RrtUnicyclePlanner):
         max_angular_velocity: float = 1.0,
         render_tree_during_planning: bool = False,
         near_node_dist_threshold: float = 0.5,
-        print_log: bool = False,
     ):
         super().__init__(
             terminate_on_goal_reached,
