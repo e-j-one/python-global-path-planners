@@ -55,9 +55,6 @@ class RrtStarSmoothUnicyclePlusPlanner(RrtStarSmoothUnicyclePlanner):
             print_log,
         )
 
-    def set_occupancy_map(self, occupancy_map, resolution, origin):
-        return super().set_occupancy_map(occupancy_map, resolution, origin)
-
     def plan_global_path(
         self,
         start_pose: Tuple[float, float, float],
@@ -225,26 +222,6 @@ class RrtStarSmoothUnicyclePlusPlanner(RrtStarSmoothUnicyclePlanner):
             if self._print_log:
                 print("Max iteration reached !!!")
             return None, sample_iter
-
-    def _check_goal_reachable(
-        self,
-        new_node_pose: Tuple[float, float, float],
-        goal_pose: Tuple[float, float, float],
-    ) -> bool:
-        return super()._check_goal_reachable(new_node_pose, goal_pose)
-
-    def _sample_position(
-        self, goal_pose: Tuple[float, float, float]
-    ) -> Tuple[float, float]:
-        return super()._sample_position(goal_pose)
-
-    def _get_collision_free_near_nodes(
-        self, new_node_pos: Tuple[float, float], near_nodes_idx: List[int]
-    ) -> Tuple[List[Tuple[float, float, float]], List[int], List[float]]:
-        return super()._get_collision_free_near_nodes(new_node_pos, near_nodes_idx)
-
-    def _check_collision(self, path: List[Tuple[float, float, float]]):
-        return super()._check_collision(path)
 
     def _get_cost_of_path(self, path: List[Tuple[float, float, float]]):
         return GeometryUtils.get_path_length(path)
