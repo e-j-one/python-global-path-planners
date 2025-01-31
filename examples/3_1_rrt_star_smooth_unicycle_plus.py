@@ -34,13 +34,13 @@ if __name__ == "__main__":
         "goal_reach_dist_threshold": 0.5,
         "goal_reach_angle_threshold": 0.1 * np.pi,
         "occupancy_map_obstacle_padding_dist": 0.5,
+        "print_log": True,
         "goal_sample_rate": 0.1,
-        "max_iter": int(14000),
+        "max_iter": int(20000),
         "max_drive_dist": 0.5,
         "linear_velocity": 1.0,
         "max_angular_velocity": 2.0,
         "near_node_dist_threshold": 1.0,
-        "print_log": True,
     }
 
     # start_pose = (0.0, 0.0, 0.0)
