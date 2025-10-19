@@ -18,8 +18,8 @@ NOTE: When connectin $p_\text{new}$ to the existing node, agent does not perform
 For unicycle robot.
 
 <p align="center">
-  <img width="40%" src="docs/figures/rrt_star_smooth_unicycle_tree.png" align="center" alt="fig1" />
-  <img width="40%" src="docs/figures/rrt_star_smooth_unicycle_path.png" align="center" alt="fig2" />
+  <img width="40%" src="docs/figures/rrt_star_smooth_unicycle_tree.png" align="center" alt="fig1a" />
+  <img width="40%" src="docs/figures/rrt_star_smooth_unicycle_path.png" align="center" alt="fig1b" />
   <figcaption align="center">Fig. 1: RRT*-SmoothUnicycle tree and path with path length as a cost.</figcaption>
 </p>
 
@@ -49,15 +49,20 @@ For unicycle robot.
 - In rewiring step, dubins path is used. 
     TODO: add graceful control (park, 2011)
 
+### A*
+Implementation of A* algorithm.
 
 ### [Theta*](https://arxiv.org/abs/1401.3843)
 Implementation of Theta* algorithm.
 LineOfSight function is implemented using supercover [Bresenham-based supercover line algorithm](http://eugen.dedu.free.fr/projects/bresenham/).
 
+
 <p align="center">
-<img width="40%"  align="center" src="docs/figures/theta_star_path.png"  alt="fig3"/>
-<figcaption align="center">Fig. 3: Theta* path.</figcaption>
+  <img width="40%" src="docs/figures/a_star_path.png" align="center" alt="fig2a"/>
+  <img width="40%" src="docs/figures/theta_star_path.png" align="center" alt="fig2b"/>
+  <figcaption align="center">Fig. 2: A* planner path (left) and Theta* planner path (right).</figcaption>
 </p>
+
 
 ## Get started
 1. Setup env using Conda.
