@@ -24,6 +24,8 @@ class AStarBendingPlanner(AStarPlanner):
         d_s: float = 0.25,
         collision_check_ratio_to_map_res: float = 0.8,
         print_log: bool = False,
+        bending_cost: float = 10.0,
+        heuristic_score_multiplier: float = 0.0,
     ):
         super().__init__(
             terminate_on_goal_reached,
@@ -35,6 +37,9 @@ class AStarBendingPlanner(AStarPlanner):
             collision_check_ratio_to_map_res,
             print_log,
         )
+
+        self._bending_cost = bending_cost
+        self._heuristic_score_multiplier = heuristic_score_multiplier
 
     def plan_global_path(
         self,
@@ -166,14 +171,24 @@ class AStarBendingPlanner(AStarPlanner):
                 neighbors.append(neighbor)
         return neighbors
 
+    def _heuristic_score(self, cell):
+        """
+        Returns the heuristic cost estimate from cell to goal_cell.
+        """
+        return (
+            np.linalg.norm(np.array(cell) - np.array(self._goal_cell))
+            * self._heuristic_score_multiplier
+        )
+
     def _get_cost(self, cell_i, cell_f):
         parent = self._parent.get(cell_i, None)
         cost = np.linalg.norm(np.array(cell_i) - np.array(cell_f))
 
         if parent == cell_f:
-            cost += 2.0  # bending penalty
+            cost += self._bending_cost  # bending penalty
         if not (parent[0] == cell_i[0] and cell_i[0] == cell_f[0]) and not (
             parent[1] == cell_i[1] and cell_i[1] == cell_f[1]
         ):
-            cost += 1.0  # bending penalty
+            cost += self._bending_cost  # bending penalty
+
         return cost
