@@ -52,15 +52,20 @@ For unicycle robot.
 ### A*
 Implementation of A* algorithm.
 
+### A*-bending
+Plans shortest path with minimum bending.
+Cost: dist + 1(bending)
+
 ### [Theta*](https://arxiv.org/abs/1401.3843)
 Implementation of Theta* algorithm.
 LineOfSight function is implemented using supercover [Bresenham-based supercover line algorithm](http://eugen.dedu.free.fr/projects/bresenham/).
 
 
 <p align="center">
-  <img width="40%" src="docs/figures/a_star_path.png" align="center" alt="fig2a"/>
-  <img width="40%" src="docs/figures/theta_star_path.png" align="center" alt="fig2b"/>
-  <figcaption align="center">Fig. 2: A* planner path (left) and Theta* planner path (right).</figcaption>
+  <img width="30%" src="docs/figures/a_star_path.png" align="center" alt="fig2a"/>
+  <img width="30%" src="docs/figures/theta_star_path.png" align="center" alt="fig2b"/>
+  <img width="30%" src="docs/figures/a_star_bending_path.png" align="center" alt="fig2c"/>
+  <figcaption align="center">Fig. 2: A* planner path (left), Theta* planner path (middle) and A* bending planner path(right).</figcaption>
 </p>
 
 
