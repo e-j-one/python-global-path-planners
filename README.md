@@ -1,4 +1,4 @@
-# [WIP] Python 2D Global Path Planners
+# Python 2D Global Path Planners
 
 ## Implemented Algorithms
 
