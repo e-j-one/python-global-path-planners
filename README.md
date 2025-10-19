@@ -54,7 +54,8 @@ Implementation of A* algorithm.
 
 ### A*-bending
 Plans shortest path with minimum bending.
-Cost: dist + 1(bending)
+- Cost: dist + 1(bending)
+- TODO: Score total num bending to fix some edge cases.
 
 ### [Theta*](https://arxiv.org/abs/1401.3843)
 Implementation of Theta* algorithm.
