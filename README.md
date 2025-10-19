@@ -59,6 +59,17 @@ LineOfSight function is implemented using supercover [Bresenham-based supercover
 <figcaption align="center">Fig. 3: Theta* path.</figcaption>
 </p>
 
+## Get started
+1. Setup env using Conda.
+    ```bash
+    conda env create --file environment.yml
+    conda activate pgpp
+    ```
+2. Run examples
+    ```bash
+    python examples/4_theta_star.py
+    ```
+
 ## How to run tests.
 ```bash
 bash run_tests.sh
